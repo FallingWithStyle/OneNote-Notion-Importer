@@ -1,4 +1,6 @@
 // OneNote related types
+export * from './onenote';
+
 export interface OneNoteNotebook {
   id: string;
   name: string;
