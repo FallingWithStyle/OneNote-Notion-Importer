@@ -50,5 +50,8 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
     "winston": "^3.17.0"
+  },
+  "dependencies": {
+    "@notionhq/client": "^5.1.0"
   }
 }
