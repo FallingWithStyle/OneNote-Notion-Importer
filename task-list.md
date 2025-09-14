@@ -1,10 +1,10 @@
-# OneNote to Notion Importer - Product Task List
+# OneNote to Notion Importer (ONI) - Product Task List
 
 ## Project Metadata
-- **Project Name**: OneNote to Notion Importer
-- **Project ID**: ONN-001
+- **Project Name**: OneNote to Notion Importer (ONI)
+- **Project ID**: ONI-001
 - **Version**: 1.0.0
-- **Last Updated**: 2024-12-19
+- **Last Updated**: 2025-09-14
 
 ---
 
@@ -15,7 +15,7 @@
 - [ ] Task 1: Initialize Node.js/TypeScript project with proper configuration
 - [ ] Task 2: Set up Commander.js or OCLIF CLI framework
 - [ ] Task 3: Create basic command structure (help, version, import, export)
-- [ ] Task 4: Implement configuration file support (.onenote2notionrc)
+- [ ] Task 4: Implement configuration file support (.onirc)
 - [ ] Task 5: Set up Winston logging with different levels
 - [ ] Task 6: Create project structure with modular architecture
 - [ ] Task 7: Set up Jest testing framework with TDD configuration

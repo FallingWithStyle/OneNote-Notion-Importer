@@ -1,10 +1,10 @@
-# OneNote to Notion Importer - Product Requirements Document
+# OneNote to Notion Importer (ONI) - Product Requirements Document
 
 ## Project Metadata
-- **Project Name**: OneNote to Notion Importer
-- **Project ID**: ONN-001
+- **Project Name**: OneNote to Notion Importer (ONI)
+- **Project ID**: ONI-001
 - **Version**: 1.0.0
-- **Last Updated**: 2024-12-19
+- **Last Updated**: 2025-09-14
 - **Status**: Draft
 
 ## 1. Executive Summary
@@ -41,7 +41,7 @@
 - **FR4**: Preserve notebook → section → page hierarchy as Notion nested pages
 - **FR5**: Upload embedded images and attachments to Notion
 - **FR6**: Provide CLI interface with options to select specific notebooks/sections/pages for import
-- **FR7**: Support configuration file (.onenote2notionrc) for storing defaults (API keys, paths, etc.)
+- **FR7**: Support configuration file (.onirc) for storing defaults (API keys, paths, etc.)
 - **FR8**: Display import progress and provide detailed error logging
 - **FR9**: Support dry-run mode to preview imports without executing them
 
@@ -103,7 +103,7 @@
 - **Acceptance Criteria**:
   - AC1: CLI tool accepts .onepkg and .one file inputs
   - AC2: Basic command structure with help and version commands
-  - AC3: Configuration file support (.onenote2notionrc)
+  - AC3: Configuration file support (.onirc)
   - AC4: Logging system with different levels (debug, info, warn, error)
 - **Technical Notes**: Use Commander.js or OCLIF, implement TypeScript configuration, set up Winston logging
 - **Dependencies**: None
@@ -241,4 +241,5 @@
   - ConvertOneNote2MarkDown project
   - Commander.js CLI framework documentation
 - **Change Log**: 
+  - 2025-09-14: Updated project name to OneNote to Notion Importer (ONI) with project ID ONI-001
   - 2024-12-19: Initial PRD creation for OneNote to Notion Importer project

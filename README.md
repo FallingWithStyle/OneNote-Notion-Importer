@@ -1,10 +1,14 @@
-# OneNote to Notion Importer
+# OneNote to Notion Importer (ONI)
+
+**Project ID**: ONI-001  
+**Version**: 1.0.0  
+**Last Updated**: 2025-09-14
 
 A powerful, offline-first CLI tool for migrating OneNote content to Notion while preserving your notebook structure and giving you complete control over what gets imported.
 
 ## Overview
 
-OneNote to Notion Importer is a local, cross-platform tool that converts OneNote files (.onepkg/.one) to Notion-compatible formats and imports them via the Notion API. The tool runs completely offline, ensuring your data never leaves your machine, and provides granular control over which notebooks, sections, or pages you want to migrate.
+OneNote to Notion Importer (ONI) is a local, cross-platform tool that converts OneNote files (.onepkg/.one) to Notion-compatible formats and imports them via the Notion API. The tool runs completely offline, ensuring your data never leaves your machine, and provides granular control over which notebooks, sections, or pages you want to migrate.
 
 ## Features
 
@@ -30,8 +34,8 @@ OneNote to Notion Importer is a local, cross-platform tool that converts OneNote
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/onenote2notion.git
-cd onenote2notion
+git clone https://github.com/your-org/oni.git
+cd oni
 
 # Install dependencies
 npm install
@@ -49,16 +53,16 @@ npm install -g .
 
 ```bash
 # Import a OneNote package to Notion
-onenote2notion import --input notebook.onepkg --notion-token YOUR_TOKEN
+oni import --file notebook.onepkg --workspace YOUR_WORKSPACE_ID
 
 # Export to local markdown files
-onenote2notion export --input notebook.onepkg --output ./exported-content
+oni export --file notebook.onepkg --output ./exported-content
 
 # Preview what will be imported (dry-run)
-onenote2notion import --input notebook.onepkg --dry-run
+oni import --file notebook.onepkg --workspace YOUR_WORKSPACE_ID --dry-run
 
 # Select specific notebooks/sections to import
-onenote2notion import --input notebook.onepkg --select
+oni import --file notebook.onepkg --workspace YOUR_WORKSPACE_ID --select
 ```
 
 ### Configuration File
@@ -67,10 +71,20 @@ Create a `.onenote2notionrc` file in your home directory:
 
 ```json
 {
-  "notionToken": "your_notion_integration_token",
-  "defaultWorkspace": "your_workspace_id",
-  "outputFormat": "markdown",
-  "logLevel": "info"
+  "notion": {
+    "workspaceId": "your_workspace_id",
+    "apiKey": "your_notion_integration_token"
+  },
+  "export": {
+    "outputDirectory": "./exported",
+    "defaultFormat": "markdown",
+    "preserveStructure": true,
+    "includeMetadata": true
+  },
+  "logging": {
+    "level": "info",
+    "file": "./logs/app.log"
+  }
 }
 ```
 
@@ -78,26 +92,30 @@ Create a `.onenote2notionrc` file in your home directory:
 
 ```bash
 # Launch the graphical interface
-onenote2notion gui
+oni gui
 ```
 
 ## Project Structure
 
 ```
-/onenote2notion
+/oni
   ├── src/
-  │   ├── cli/           # Command-line interface
-  │   ├── converter/     # OneNote file conversion logic
-  │   ├── notion/        # Notion API integration
-  │   ├── gui/           # Electron GUI wrapper
-  │   └── utils/         # Shared utilities
-  ├── tests/             # Unit and integration tests
-  ├── docs/              # Documentation
-  ├── examples/          # Sample OneNote files for testing
+  │   ├── commands/      # CLI command implementations
+  │   ├── services/      # Business logic services
+  │   ├── types/         # TypeScript type definitions
+  │   └── utils/         # Shared utilities (logging, etc.)
+  ├── tests/
+  │   ├── unit/          # Unit tests
+  │   ├── integration/   # Integration tests
+  │   └── fixtures/      # Test data and sample files
+  ├── dist/              # Compiled JavaScript output
+  ├── logs/              # Application logs
   ├── README.md          # Project overview (this file)
   ├── PRD.md            # Product Requirements Document
   ├── task-list.md      # Development task list
-  └── package.json
+  ├── package.json
+  ├── tsconfig.json
+  └── jest.config.js
 ```
 
 ## Development
