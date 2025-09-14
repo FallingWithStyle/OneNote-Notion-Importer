@@ -3,7 +3,7 @@
  * Handles CLI display of notebook structure
  */
 
-import { OneNoteHierarchy, OneNoteNotebook, OneNoteSection, OneNotePage } from '../../types/onenote';
+import { OneNoteHierarchy, OneNoteNotebook, OneNoteSection, OneNotePage, OneNoteDisplayOptions } from '../../types/onenote';
 
 export interface IOneNoteDisplayService {
   /**
@@ -11,21 +11,21 @@ export interface IOneNoteDisplayService {
    * @param hierarchy The OneNote hierarchy to display
    * @param options Display options
    */
-  displayHierarchy(hierarchy: OneNoteHierarchy, options?: DisplayOptions): void;
+  displayHierarchy(hierarchy: OneNoteHierarchy, options?: OneNoteDisplayOptions): void;
 
   /**
    * Display a single notebook
    * @param notebook The notebook to display
    * @param options Display options
    */
-  displayNotebook(notebook: OneNoteNotebook, options?: DisplayOptions): void;
+  displayNotebook(notebook: OneNoteNotebook, options?: OneNoteDisplayOptions): void;
 
   /**
    * Display a single section
    * @param section The section to display
    * @param options Display options
    */
-  displaySection(section: OneNoteSection, options?: DisplayOptions): void;
+  displaySection(section: OneNoteSection, options?: OneNoteDisplayOptions): void;
 
   /**
    * Display summary statistics
@@ -34,22 +34,15 @@ export interface IOneNoteDisplayService {
   displaySummary(hierarchy: OneNoteHierarchy): void;
 }
 
-export interface DisplayOptions {
-  showMetadata: boolean;
-  showContent: boolean;
-  maxDepth: number;
-  includeEmptySections: boolean;
-  sortBy: 'name' | 'date' | 'size';
-}
-
 export class OneNoteDisplayService implements IOneNoteDisplayService {
-  displayHierarchy(hierarchy: OneNoteHierarchy, options?: DisplayOptions): void {
-    const opts = { 
+  displayHierarchy(hierarchy: OneNoteHierarchy, options?: OneNoteDisplayOptions): void {
+    const opts: Required<OneNoteDisplayOptions> = { 
       showMetadata: false, 
       showContent: false, 
       maxDepth: 3, 
       includeEmptySections: true, 
-      sortBy: 'name' as const,
+      sortBy: 'name',
+      outputFormat: 'tree',
       ...options 
     };
 
@@ -64,13 +57,14 @@ export class OneNoteDisplayService implements IOneNoteDisplayService {
     });
   }
 
-  displayNotebook(notebook: OneNoteNotebook, options?: DisplayOptions): void {
-    const opts = { 
+  displayNotebook(notebook: OneNoteNotebook, options?: OneNoteDisplayOptions): void {
+    const opts: Required<OneNoteDisplayOptions> = { 
       showMetadata: false, 
       showContent: false, 
       maxDepth: 3, 
       includeEmptySections: true, 
-      sortBy: 'name' as const,
+      sortBy: 'name',
+      outputFormat: 'tree',
       ...options 
     };
 
@@ -88,13 +82,14 @@ export class OneNoteDisplayService implements IOneNoteDisplayService {
     }
   }
 
-  displaySection(section: OneNoteSection, options?: DisplayOptions): void {
-    const opts = { 
+  displaySection(section: OneNoteSection, options?: OneNoteDisplayOptions): void {
+    const opts: Required<OneNoteDisplayOptions> = { 
       showMetadata: false, 
       showContent: false, 
       maxDepth: 3, 
       includeEmptySections: true, 
-      sortBy: 'name' as const,
+      sortBy: 'name',
+      outputFormat: 'tree',
       ...options 
     };
 

@@ -3,7 +3,8 @@
  * Following TDD Red-Green-Refactor cycle
  */
 
-import { OneNoteDisplayService, IOneNoteDisplayService, DisplayOptions } from '../../../../src/services/onenote/display.service';
+import { OneNoteDisplayService, IOneNoteDisplayService } from '../../../../src/services/onenote/display.service';
+import { OneNoteDisplayOptions } from '../../../../src/types/onenote';
 import { OneNoteHierarchy, OneNoteNotebook, OneNoteSection, OneNotePage } from '../../../../src/types/onenote';
 
 describe('OneNoteDisplayService', () => {
@@ -73,7 +74,7 @@ describe('OneNoteDisplayService', () => {
     it('should respect display options', () => {
       // Arrange
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      const options: DisplayOptions = {
+      const options: OneNoteDisplayOptions = {
         showMetadata: true,
         showContent: false,
         maxDepth: 2,
@@ -117,7 +118,7 @@ describe('OneNoteDisplayService', () => {
     it('should limit depth based on maxDepth option', () => {
       // Arrange
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      const options: DisplayOptions = {
+      const options: OneNoteDisplayOptions = {
         showMetadata: false,
         showContent: false,
         maxDepth: 1,
@@ -159,7 +160,7 @@ describe('OneNoteDisplayService', () => {
     it('should respect display options for notebook', () => {
       // Arrange
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      const options: DisplayOptions = {
+      const options: OneNoteDisplayOptions = {
         showMetadata: true,
         showContent: true,
         maxDepth: 3,
@@ -224,7 +225,7 @@ describe('OneNoteDisplayService', () => {
     it('should respect display options for section', () => {
       // Arrange
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      const options: DisplayOptions = {
+      const options: OneNoteDisplayOptions = {
         showMetadata: true,
         showContent: false,
         maxDepth: 2,

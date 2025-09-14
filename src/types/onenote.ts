@@ -44,10 +44,21 @@ export interface OneNoteExtractionResult {
 }
 
 export interface OneNoteParsingOptions {
-  includeMetadata: boolean;
-  extractImages: boolean;
-  preserveFormatting: boolean;
-  fallbackOnError: boolean;
+  includeMetadata?: boolean;
+  extractImages?: boolean;
+  preserveFormatting?: boolean;
+  fallbackOnError?: boolean;
+  maxFileSize?: number;
+  timeout?: number;
+}
+
+export interface OneNoteDisplayOptions {
+  showMetadata?: boolean;
+  showContent?: boolean;
+  maxDepth?: number;
+  includeEmptySections?: boolean;
+  sortBy?: 'name' | 'date' | 'size';
+  outputFormat?: 'tree' | 'json' | 'table';
 }
 
 export interface OneNoteFileInfo {
@@ -56,4 +67,22 @@ export interface OneNoteFileInfo {
   size: number;
   isValid: boolean;
   lastModified: Date;
+  checksum?: string;
+  encoding?: string;
+}
+
+export interface OneNoteProcessingResult {
+  success: boolean;
+  processedFiles: number;
+  failedFiles: number;
+  totalSize: number;
+  processingTime: number;
+  errors: string[];
+}
+
+export interface OneNoteValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  fileInfo: OneNoteFileInfo;
 }

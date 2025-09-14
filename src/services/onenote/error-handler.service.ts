@@ -4,15 +4,12 @@
  */
 
 import { OneNoteExtractionResult, OneNoteHierarchy } from '../../types/onenote';
+import { OneNoteMockDataFactory } from './mock-data.factory';
+import { OneNoteErrorUtils, OneNoteError } from './error-utils';
 import * as fs from 'fs';
 import * as path from 'path';
 
-export interface OneNoteError extends Error {
-  code: string;
-  filePath?: string;
-  recoverable: boolean;
-  fallbackUsed?: boolean;
-}
+// OneNoteError is now defined in error-utils.ts
 
 export interface IOneNoteErrorHandlerService {
   /**
@@ -76,37 +73,9 @@ export class OneNoteErrorHandlerService implements IOneNoteErrorHandlerService {
 
     // Handle corrupted files with fallback
     if (errorMessage.includes('invalid file format') || errorMessage.includes('corrupted')) {
-      const fallbackHierarchy: OneNoteHierarchy = {
-        notebooks: [{
-          id: 'fallback-notebook',
-          name: 'Fallback Notebook',
-          sections: [{
-            id: 'fallback-section',
-            name: 'Fallback Section',
-            pages: [{
-              id: 'fallback-page',
-              title: 'Fallback Page',
-              content: 'Raw content extracted',
-              createdDate: new Date(),
-              lastModifiedDate: new Date(),
-              metadata: {}
-            }],
-            createdDate: new Date(),
-            lastModifiedDate: new Date(),
-            metadata: {}
-          }],
-          createdDate: new Date(),
-          lastModifiedDate: new Date(),
-          metadata: {}
-        }],
-        totalNotebooks: 1,
-        totalSections: 1,
-        totalPages: 1
-      };
-
       return {
         success: true,
-        hierarchy: fallbackHierarchy
+        hierarchy: OneNoteMockDataFactory.createFallbackHierarchy('extraction')
       };
     }
 
@@ -122,34 +91,15 @@ export class OneNoteErrorHandlerService implements IOneNoteErrorHandlerService {
     
     // Handle parsing errors with basic content extraction
     if (errorMessage.includes('failed to parse') || errorMessage.includes('invalid character encoding')) {
-      const fallbackHierarchy: OneNoteHierarchy = {
-        notebooks: [{
-          id: 'parsed-notebook',
-          name: 'Parsed Notebook',
-          sections: [{
-            id: 'parsed-section',
-            name: 'Parsed Section',
-            pages: [{
-              id: 'parsed-page',
-              title: 'Raw Content',
-              content: errorMessage.includes('encoding') ? 'Encoding error detected' : 'Raw content extracted',
-              createdDate: new Date(),
-              lastModifiedDate: new Date(),
-              metadata: {}
-            }],
-            createdDate: new Date(),
-            lastModifiedDate: new Date(),
-            metadata: {}
-          }],
-          createdDate: new Date(),
-          lastModifiedDate: new Date(),
-          metadata: {}
-        }],
-        totalNotebooks: 1,
-        totalSections: 1,
-        totalPages: 1
-      };
-
+      const fallbackHierarchy = OneNoteMockDataFactory.createFallbackHierarchy('parsing');
+      
+      // Update content for specific error types
+      if (errorMessage.includes('encoding')) {
+        if (fallbackHierarchy.notebooks[0]?.sections[0]?.pages[0]) {
+          fallbackHierarchy.notebooks[0].sections[0].pages[0].content = 'Encoding error detected';
+        }
+      }
+      
       return {
         success: true,
         hierarchy: fallbackHierarchy
@@ -175,46 +125,17 @@ export class OneNoteErrorHandlerService implements IOneNoteErrorHandlerService {
     // Default fallback
     return {
       success: true,
-      hierarchy: {
+      hierarchy: OneNoteMockDataFactory.createMockHierarchy({
         notebooks: [],
         totalNotebooks: 0,
         totalSections: 0,
         totalPages: 0
-      }
+      })
     };
   }
 
   isRecoverableError(error: Error): boolean {
-    const errorMessage = error.message.toLowerCase();
-    
-    // Check if it's a OneNoteError with recoverable flag
-    if ('recoverable' in error && typeof (error as any).recoverable === 'boolean') {
-      return (error as any).recoverable;
-    }
-
-    // Check for recoverable error patterns
-    const recoverablePatterns = [
-      'invalid file format',
-      'corrupted data',
-      'unsupported version',
-      'missing metadata'
-    ];
-
-    const nonRecoverablePatterns = [
-      'file not found',
-      'permission denied',
-      'out of memory',
-      'disk full',
-      'network error'
-    ];
-
-    // Check for non-recoverable patterns first
-    if (nonRecoverablePatterns.some(pattern => errorMessage.includes(pattern))) {
-      return false;
-    }
-
-    // Check for recoverable patterns
-    return recoverablePatterns.some(pattern => errorMessage.includes(pattern));
+    return OneNoteErrorUtils.isRecoverableError(error);
   }
 
   async getFallbackContent(filePath: string): Promise<string> {

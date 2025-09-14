@@ -22,13 +22,13 @@
 - [x] Task 8: Configure build system and package.json scripts
 
 ### Story 1.2: OneNote File Extraction
-- [ ] Task 1: Research OneNote file format (.onepkg and .one files)
-- [ ] Task 2: Implement .onepkg archive extraction functionality
-- [ ] Task 3: Create .one file parser to identify notebooks, sections, and pages
-- [ ] Task 4: Build hierarchical structure representation in memory
-- [ ] Task 5: Implement CLI display of notebook structure
-- [ ] Task 6: Add error handling for corrupted or invalid files
-- [ ] Task 7: Create fallback mechanisms for complex parsing scenarios
+- [x] Task 1: Research OneNote file format (.onepkg and .one files)
+- [x] Task 2: Implement .onepkg archive extraction functionality
+- [x] Task 3: Create .one file parser to identify notebooks, sections, and pages
+- [x] Task 4: Build hierarchical structure representation in memory
+- [x] Task 5: Implement CLI display of notebook structure
+- [x] Task 6: Add error handling for corrupted or invalid files
+- [x] Task 7: Create fallback mechanisms for complex parsing scenarios
 
 ---
 

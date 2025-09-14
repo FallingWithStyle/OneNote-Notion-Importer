@@ -3,7 +3,8 @@
  * Following TDD Red-Green-Refactor cycle
  */
 
-import { OneNoteErrorHandlerService, IOneNoteErrorHandlerService, OneNoteError } from '../../../../src/services/onenote/error-handler.service';
+import { OneNoteErrorHandlerService, IOneNoteErrorHandlerService } from '../../../../src/services/onenote/error-handler.service';
+import { OneNoteError } from '../../../../src/services/onenote/error-utils';
 import { OneNoteExtractionResult } from '../../../../src/types/onenote';
 import * as path from 'path';
 
@@ -184,13 +185,10 @@ describe('OneNoteErrorHandlerService', () => {
 
     it('should handle OneNoteError objects', () => {
       // Arrange
-      const oneNoteError: OneNoteError = {
-        name: 'OneNoteError',
-        message: 'Corrupted file',
-        code: 'CORRUPTED_FILE',
+      const oneNoteError = new OneNoteError('Corrupted file', 'CORRUPTED_FILE', {
         filePath: '/path/to/file.one',
         recoverable: true
-      };
+      });
       
       // Act
       const isRecoverable = service.isRecoverableError(oneNoteError);
@@ -201,13 +199,10 @@ describe('OneNoteErrorHandlerService', () => {
 
     it('should handle OneNoteError objects with recoverable false', () => {
       // Arrange
-      const oneNoteError: OneNoteError = {
-        name: 'OneNoteError',
-        message: 'File not found',
-        code: 'FILE_NOT_FOUND',
+      const oneNoteError = new OneNoteError('File not found', 'FILE_NOT_FOUND', {
         filePath: '/path/to/file.one',
         recoverable: false
-      };
+      });
       
       // Act
       const isRecoverable = service.isRecoverableError(oneNoteError);

@@ -8,6 +8,7 @@ import { IOneNoteExtractionService, OneNoteExtractionService } from './extractio
 import { IOneNoteParserService, OneNoteParserService } from './parser.service';
 import { IOneNoteDisplayService, OneNoteDisplayService } from './display.service';
 import { IOneNoteErrorHandlerService, OneNoteErrorHandlerService } from './error-handler.service';
+import { OneNoteErrorUtils, OneNoteError } from './error-utils';
 
 export interface IOneNoteService {
   /**
@@ -57,7 +58,14 @@ export class OneNoteService implements IOneNoteService {
       return await this.extractionService.extractMultiple(filePaths, options);
     } catch (error) {
       // Handle extraction errors with fallback
-      if (error instanceof Error) {
+      if (error instanceof OneNoteError) {
+        if (error.recoverable) {
+          const result = await this.errorHandlerService.handleExtractionError(error, filePaths[0] || '');
+          return result;
+        } else {
+          return OneNoteErrorUtils.createErrorResponse(error, { filePath: filePaths[0] || '', operation: 'processFiles' });
+        }
+      } else if (error instanceof Error) {
         if (this.errorHandlerService.isRecoverableError(error)) {
           const result = await this.errorHandlerService.handleExtractionError(error, filePaths[0] || '');
           return result;
@@ -74,10 +82,7 @@ export class OneNoteService implements IOneNoteService {
       }
       
       // Handle unknown errors
-      return {
-        success: false,
-        error: 'Unknown error occurred'
-      };
+      return OneNoteErrorUtils.createErrorResponse(new Error('Unknown error occurred'), { operation: 'processFiles' });
     }
   }
 

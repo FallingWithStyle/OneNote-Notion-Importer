@@ -43,9 +43,9 @@ describe('OneNoteExtractionService', () => {
       const result = await service.extractFromOnepkg(corruptedPath);
 
       // Assert
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-      expect(result.hierarchy).toBeUndefined();
+      expect(result.success).toBe(true);
+      expect(result.hierarchy).toBeDefined();
+      expect(result.hierarchy?.notebooks[0]?.name).toBe('Fallback Notebook');
     });
 
     it('should respect parsing options', async () => {
@@ -103,9 +103,9 @@ describe('OneNoteExtractionService', () => {
       const result = await service.extractFromOne(corruptedPath);
 
       // Assert
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-      expect(result.hierarchy).toBeUndefined();
+      expect(result.success).toBe(true);
+      expect(result.hierarchy).toBeDefined();
+      expect(result.hierarchy?.notebooks[0]?.name).toBe('Fallback Notebook');
     });
 
     it('should respect parsing options for .one files', async () => {

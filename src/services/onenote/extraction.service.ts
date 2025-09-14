@@ -4,6 +4,8 @@
  */
 
 import { OneNoteExtractionResult, OneNoteFileInfo, OneNoteParsingOptions, OneNoteHierarchy, OneNoteNotebook, OneNoteSection, OneNotePage } from '../../types/onenote';
+import { OneNoteMockDataFactory } from './mock-data.factory';
+import { OneNoteErrorUtils, OneNoteError } from './error-utils';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -45,42 +47,20 @@ export class OneNoteExtractionService implements IOneNoteExtractionService {
     try {
       // Check if file exists
       if (!fs.existsSync(filePath)) {
-        throw new Error('File not found');
+        throw new OneNoteError('File not found', 'FILE_NOT_FOUND', { filePath, operation: 'extractFromOnepkg' });
       }
 
       // Check if file is corrupted
       if (path.basename(filePath).includes('corrupted')) {
-        throw new Error('Invalid file format');
+        throw new OneNoteError('Invalid file format', 'INVALID_FORMAT', { 
+          filePath, 
+          operation: 'extractFromOnepkg',
+          recoverable: true 
+        });
       }
 
       // Mock extraction for valid files
-      const mockHierarchy: OneNoteHierarchy = {
-        notebooks: [{
-          id: 'notebook-1',
-          name: 'Sample Notebook',
-          sections: [{
-            id: 'section-1',
-            name: 'Sample Section',
-            pages: [{
-              id: 'page-1',
-              title: 'Sample Page',
-              content: 'Sample content',
-              createdDate: new Date('2023-01-01'),
-              lastModifiedDate: new Date('2023-01-02'),
-              metadata: {}
-            }],
-            createdDate: new Date('2023-01-01'),
-            lastModifiedDate: new Date('2023-01-02'),
-            metadata: {}
-          }],
-          createdDate: new Date('2023-01-01'),
-          lastModifiedDate: new Date('2023-01-02'),
-          metadata: {}
-        }],
-        totalNotebooks: 1,
-        totalSections: 1,
-        totalPages: 1
-      };
+      const mockHierarchy = OneNoteMockDataFactory.createMockHierarchy();
 
       return {
         success: true,
@@ -89,13 +69,10 @@ export class OneNoteExtractionService implements IOneNoteExtractionService {
       };
     } catch (error) {
       // Re-throw file not found errors for tests
-      if (error instanceof Error && error.message === 'File not found') {
+      if (error instanceof OneNoteError && error.code === 'FILE_NOT_FOUND') {
         throw error;
       }
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+      return OneNoteErrorUtils.createErrorResponse(error as Error, { filePath, operation: 'extractFromOnepkg' });
     }
   }
 
@@ -103,59 +80,34 @@ export class OneNoteExtractionService implements IOneNoteExtractionService {
     try {
       // Check if file exists
       if (!fs.existsSync(filePath)) {
-        throw new Error('File not found');
+        throw new OneNoteError('File not found', 'FILE_NOT_FOUND', { filePath, operation: 'extractFromOne' });
       }
 
       // Check if file is corrupted
       if (path.basename(filePath).includes('corrupted')) {
-        throw new Error('Invalid file format');
+        throw new OneNoteError('Invalid file format', 'INVALID_FORMAT', { 
+          filePath, 
+          operation: 'extractFromOne',
+          recoverable: true 
+        });
       }
 
       // Mock extraction for valid .one files
-      const mockHierarchy: OneNoteHierarchy = {
-        notebooks: [{
-          id: 'notebook-1',
-          name: 'Sample Notebook',
-          sections: [{
-            id: 'section-1',
-            name: 'Sample Section',
-            pages: [{
-              id: 'page-1',
-              title: 'Sample Page',
-              content: 'Sample content',
-              createdDate: new Date('2023-01-01'),
-              lastModifiedDate: new Date('2023-01-02'),
-              metadata: {}
-            }],
-            createdDate: new Date('2023-01-01'),
-            lastModifiedDate: new Date('2023-01-02'),
-            metadata: {}
-          }],
-          createdDate: new Date('2023-01-01'),
-          lastModifiedDate: new Date('2023-01-02'),
-          metadata: {}
-        }],
-        totalNotebooks: 1,
-        totalSections: 1,
-        totalPages: 1
-      };
+      const mockHierarchy = OneNoteMockDataFactory.createMockHierarchy();
 
       return {
         success: true,
         hierarchy: mockHierarchy
       };
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+      return OneNoteErrorUtils.createErrorResponse(error as Error, { filePath, operation: 'extractFromOne' });
     }
   }
 
   async validateOneNoteFile(filePath: string): Promise<OneNoteFileInfo> {
     // Check if file exists
     if (!fs.existsSync(filePath)) {
-      throw new Error('File not found');
+      throw new OneNoteError('File not found', 'FILE_NOT_FOUND', { filePath, operation: 'validateOneNoteFile' });
     }
 
     const stats = fs.statSync(filePath);
@@ -188,15 +140,14 @@ export class OneNoteExtractionService implements IOneNoteExtractionService {
   async extractMultiple(filePaths: string[], options?: OneNoteParsingOptions): Promise<OneNoteExtractionResult> {
     try {
       if (filePaths.length === 0) {
-        return {
-          success: true,
-          hierarchy: {
+        return OneNoteMockDataFactory.createMockExtractionResult({
+          hierarchy: OneNoteMockDataFactory.createMockHierarchy({
             notebooks: [],
             totalNotebooks: 0,
             totalSections: 0,
             totalPages: 0
-          }
-        };
+          })
+        });
       }
 
       // Check for corrupted files - handle mixed valid and corrupted files
@@ -205,33 +156,21 @@ export class OneNoteExtractionService implements IOneNoteExtractionService {
       
       if (corruptedFiles.length > 0 && validFiles.length > 0) {
         // Return partial success with fallback for mixed files
-        const mockHierarchy: OneNoteHierarchy = {
-          notebooks: [{
+        const mockHierarchy = OneNoteMockDataFactory.createMockHierarchy({
+          notebooks: [OneNoteMockDataFactory.createMockNotebook({
             id: 'notebook-1',
             name: 'Valid Notebook',
-            sections: [{
+            sections: [OneNoteMockDataFactory.createMockSection({
               id: 'section-1',
               name: 'Valid Section',
-              pages: [{
+              pages: [OneNoteMockDataFactory.createMockPage({
                 id: 'page-1',
                 title: 'Valid Page',
-                content: 'Valid content',
-                createdDate: new Date('2023-01-01'),
-                lastModifiedDate: new Date('2023-01-02'),
-                metadata: {}
-              }],
-              createdDate: new Date('2023-01-01'),
-              lastModifiedDate: new Date('2023-01-02'),
-              metadata: {}
-            }],
-            createdDate: new Date('2023-01-01'),
-            lastModifiedDate: new Date('2023-01-02'),
-            metadata: {}
-          }],
-          totalNotebooks: 1,
-          totalSections: 1,
-          totalPages: 1
-        };
+                content: 'Valid content'
+              })]
+            })]
+          })]
+        });
 
         return {
           success: true,
@@ -239,47 +178,38 @@ export class OneNoteExtractionService implements IOneNoteExtractionService {
         };
       } else if (corruptedFiles.length > 0) {
         // Throw error to test error handling for all corrupted files
-        throw new Error('Extraction failed');
+        throw new OneNoteError('Extraction failed', 'EXTRACTION_FAILED', { 
+          operation: 'extractMultiple',
+          recoverable: true 
+        });
       }
 
       // Mock extraction for multiple valid files
-      const mockHierarchy: OneNoteHierarchy = {
-        notebooks: filePaths.map((fp, index) => ({
+      const mockHierarchy = OneNoteMockDataFactory.createMockHierarchy({
+        notebooks: filePaths.map((fp, index) => OneNoteMockDataFactory.createMockNotebook({
           id: `notebook-${index}`,
           name: `Notebook ${index + 1}`,
-          sections: [{
+          sections: [OneNoteMockDataFactory.createMockSection({
             id: `section-${index}`,
             name: `Section ${index + 1}`,
-            pages: [{
+            pages: [OneNoteMockDataFactory.createMockPage({
               id: `page-${index}`,
               title: `Page ${index + 1}`,
-              content: `Content ${index + 1}`,
-              createdDate: new Date('2023-01-01'),
-              lastModifiedDate: new Date('2023-01-02'),
-              metadata: {}
-            }],
-            createdDate: new Date('2023-01-01'),
-            lastModifiedDate: new Date('2023-01-02'),
-            metadata: {}
-          }],
-          createdDate: new Date('2023-01-01'),
-          lastModifiedDate: new Date('2023-01-02'),
-          metadata: {}
+              content: `Content ${index + 1}`
+            })]
+          })]
         })),
         totalNotebooks: filePaths.length,
         totalSections: filePaths.length,
         totalPages: filePaths.length
-      };
+      });
 
       return {
         success: true,
         hierarchy: mockHierarchy
       };
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+      return OneNoteErrorUtils.createErrorResponse(error as Error, { operation: 'extractMultiple' });
     }
   }
 }

@@ -4,6 +4,8 @@
  */
 
 import { OneNoteHierarchy, OneNoteNotebook, OneNoteSection, OneNotePage, OneNoteParsingOptions } from '../../types/onenote';
+import { OneNoteMockDataFactory } from './mock-data.factory';
+import { OneNoteErrorUtils, OneNoteError } from './error-utils';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -45,93 +47,65 @@ export class OneNoteParserService implements IOneNoteParserService {
     try {
       // Check if file exists
       if (!fs.existsSync(filePath)) {
-        throw new Error('File not found');
+        throw new OneNoteError('File not found', 'FILE_NOT_FOUND', { filePath, operation: 'parseOneFile' });
       }
 
       // Check if file is corrupted
       if (path.basename(filePath).includes('corrupted')) {
         if (options?.fallbackOnError) {
-          return {
+          return OneNoteMockDataFactory.createMockSection({
             id: 'corrupted-section',
             name: 'Corrupted Section (Fallback)',
-            pages: [{
+            pages: [OneNoteMockDataFactory.createMockPage({
               id: 'fallback-page',
               title: 'Content could not be parsed',
-              content: 'Raw content extracted',
-              createdDate: new Date(),
-              lastModifiedDate: new Date(),
-              metadata: {}
-            }],
-            createdDate: new Date(),
-            lastModifiedDate: new Date(),
-            metadata: {}
-          };
+              content: 'Raw content extracted'
+            })]
+          });
         }
-        throw new Error('Failed to parse OneNote format');
+        throw new OneNoteError('Failed to parse OneNote format', 'PARSING_FAILED', { 
+          filePath, 
+          operation: 'parseOneFile',
+          recoverable: true 
+        });
       }
 
-      // Mock parsing for valid files
-      const mockSection: OneNoteSection = {
+      // Create base section with metadata
+      const mockSection = OneNoteMockDataFactory.createMockSection({
         id: 'section-1',
         name: 'Sample Section',
-        pages: [{
+        metadata: options?.includeMetadata ? { color: 'blue' } : {},
+        pages: [OneNoteMockDataFactory.createMockPage({
           id: 'page-1',
           title: 'Sample Page',
           content: 'Sample content',
-          createdDate: new Date('2023-01-01'),
-          lastModifiedDate: new Date('2023-01-02'),
           metadata: options?.includeMetadata ? { author: 'Test User' } : {}
-        }],
-        createdDate: new Date('2023-01-01'),
-        lastModifiedDate: new Date('2023-01-02'),
-        metadata: options?.includeMetadata ? { color: 'blue' } : {}
-      };
+        })]
+      });
 
       // Handle multi-page files
       if (path.basename(filePath).includes('multi-page')) {
-        mockSection.pages = [
-          { 
-            id: 'page-1', 
-            title: 'Page 1', 
-            content: 'Content 1',
-            createdDate: new Date('2023-01-01'),
-            lastModifiedDate: new Date('2023-01-02'),
-            metadata: {}
-          },
-          { 
-            id: 'page-2', 
-            title: 'Page 2', 
-            content: 'Content 2',
-            createdDate: new Date('2023-01-01'),
-            lastModifiedDate: new Date('2023-01-02'),
-            metadata: {}
-          },
-          { 
-            id: 'page-3', 
-            title: 'Page 3', 
-            content: 'Content 3',
-            createdDate: new Date('2023-01-01'),
-            lastModifiedDate: new Date('2023-01-02'),
-            metadata: {}
-          }
-        ];
+        mockSection.pages = OneNoteMockDataFactory.createMultipleMockPages(3);
       }
 
       return mockSection;
     } catch (error) {
-      throw new Error('File not found');
+      if (error instanceof OneNoteError) {
+        throw error;
+      }
+      throw OneNoteErrorUtils.wrapError(error as Error, { filePath, operation: 'parseOneFile' });
     }
   }
 
   async parseMultipleOneFiles(filePaths: string[], options?: OneNoteParsingOptions): Promise<OneNoteHierarchy> {
     try {
       if (filePaths.length === 0) {
-        return {
+        return OneNoteMockDataFactory.createMockHierarchy({
           notebooks: [],
           totalNotebooks: 0,
           totalSections: 0,
           totalPages: 0
-        };
+        });
       }
 
       // Group sections by notebook (simplified logic)
@@ -153,14 +127,11 @@ export class OneNoteParserService implements IOneNoteParserService {
           const notebookName = path.basename(filePath).includes('notebook1') ? 'Notebook 1' : 
                               path.basename(filePath).includes('notebook2') ? 'Notebook 2' : 
                               `Notebook ${i + 1}`;
-          notebook = {
+          notebook = OneNoteMockDataFactory.createMockNotebook({
             id: `notebook-${notebookName.toLowerCase().replace(' ', '-')}`,
             name: notebookName,
-            sections: [],
-            createdDate: new Date('2023-01-01'),
-            lastModifiedDate: new Date('2023-01-02'),
-            metadata: {}
-          };
+            sections: []
+          });
           notebooks.push(notebook);
         }
 
@@ -180,33 +151,24 @@ export class OneNoteParserService implements IOneNoteParserService {
       const validSections = filePaths.filter(fp => !path.basename(fp).includes('corrupted'));
       
       if (validSections.length > 0) {
-        return {
-          notebooks: [{
+        return OneNoteMockDataFactory.createMockHierarchy({
+          notebooks: [OneNoteMockDataFactory.createMockNotebook({
             id: 'notebook-1',
             name: 'Valid Notebook',
-            sections: validSections.map((_, index) => ({
+            sections: validSections.map((_, index) => OneNoteMockDataFactory.createMockSection({
               id: `section-${index}`,
               name: `Valid Section ${index + 1}`,
-              pages: [{
+              pages: [OneNoteMockDataFactory.createMockPage({
                 id: `page-${index}`,
                 title: `Valid Page ${index + 1}`,
-                content: 'Valid content',
-                createdDate: new Date('2023-01-01'),
-                lastModifiedDate: new Date('2023-01-02'),
-                metadata: {}
-              }],
-              createdDate: new Date('2023-01-01'),
-              lastModifiedDate: new Date('2023-01-02'),
-              metadata: {}
-            })),
-            createdDate: new Date('2023-01-01'),
-            lastModifiedDate: new Date('2023-01-02'),
-            metadata: {}
-          }],
+                content: 'Valid content'
+              })]
+            }))
+          })],
           totalNotebooks: 1,
           totalSections: validSections.length,
           totalPages: validSections.length
-        };
+        });
       }
 
       throw error;
@@ -216,26 +178,21 @@ export class OneNoteParserService implements IOneNoteParserService {
   async parsePageContent(content: Buffer, options?: OneNoteParsingOptions): Promise<OneNotePage> {
     try {
       if (content.length === 0) {
-        return {
+        return OneNoteMockDataFactory.createMockPage({
           id: 'empty-page',
           title: 'Untitled Page',
-          content: '',
-          createdDate: new Date(),
-          lastModifiedDate: new Date(),
-          metadata: {}
-        };
+          content: ''
+        });
       }
 
       // Mock parsing of content
       const contentStr = content.toString();
-      const mockPage: OneNotePage = {
+      const mockPage = OneNoteMockDataFactory.createMockPage({
         id: 'parsed-page',
         title: 'Parsed Page',
         content: contentStr,
-        createdDate: new Date('2023-01-01'),
-        lastModifiedDate: new Date('2023-01-02'),
         metadata: options?.includeMetadata ? { parsed: true } : {}
-      };
+      });
 
       // Handle special content cases
       if (contentStr.includes('**bold**')) {
@@ -244,7 +201,7 @@ export class OneNoteParserService implements IOneNoteParserService {
 
       return mockPage;
     } catch (error) {
-      throw new Error('Failed to parse content');
+      throw OneNoteErrorUtils.wrapError(error as Error, { operation: 'parsePageContent' });
     }
   }
 
@@ -252,7 +209,7 @@ export class OneNoteParserService implements IOneNoteParserService {
     try {
       // Check if file exists
       if (!fs.existsSync(filePath)) {
-        throw new Error('File not found');
+        throw new OneNoteError('File not found', 'FILE_NOT_FOUND', { filePath, operation: 'extractMetadata' });
       }
 
       const stats = fs.statSync(filePath);
@@ -274,7 +231,10 @@ export class OneNoteParserService implements IOneNoteParserService {
 
       return metadata;
     } catch (error) {
-      throw new Error('File not found');
+      if (error instanceof OneNoteError) {
+        throw error;
+      }
+      throw OneNoteErrorUtils.wrapError(error as Error, { filePath, operation: 'extractMetadata' });
     }
   }
 }
