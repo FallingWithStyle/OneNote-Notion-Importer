@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { logger } from '../utils/logger';
-import { ConfigService } from '../services/config.service';
+import { CommandHelpers } from '../utils/command-helpers';
 
 const exportCommand = new Command('export');
 
@@ -13,22 +13,15 @@ exportCommand
   .option('--verbose', 'Enable verbose logging')
   .action(async (options) => {
     try {
-      logger.info('Starting OneNote export process...');
-      
-      // Set log level based on verbose flag
-      if (options.verbose) {
-        logger.level = 'debug';
-      }
+      CommandHelpers.logCommandStart('export', 'export');
+      CommandHelpers.setupVerboseLogging(options);
 
       // Load configuration
-      const configService = new ConfigService();
+      const configService = await CommandHelpers.loadConfiguration(options.config);
       const config = await configService.loadConfig(options.config);
 
       // Validate required options
-      if (!options.file) {
-        logger.error('OneNote file path is required. Use -f or --file option.');
-        throw new Error('OneNote file path is required');
-      }
+      CommandHelpers.validateFilePath(options.file, 'export');
 
       const outputDir = options.output || config.export.outputDirectory || './exported';
       const format = options.format || 'markdown';
@@ -38,11 +31,10 @@ exportCommand
       logger.info(`Export format: ${format}`);
 
       // TODO: Implement actual export logic
-      logger.info('Export process completed successfully!');
+      CommandHelpers.logCommandSuccess('export', 'Export');
       
     } catch (error) {
-      logger.error('Export failed:', error);
-      throw error;
+      CommandHelpers.handleCommandError(error, 'Export');
     }
   });
 

@@ -19,17 +19,24 @@ jest.mock('../../../src/utils/logger', () => ({
 
 describe('ConfigService', () => {
   let configService: ConfigService;
-  const mockConfigPath = '/mock/config/path/.onenote2notionrc';
-  const mockConfigDir = '/mock/config/path';
+  const mockConfigPath = '/Users/patrick/.onirc';
+  const mockConfigDir = '/Users/patrick';
 
   beforeEach(() => {
     jest.clearAllMocks();
-    configService = new ConfigService();
     
-    // Mock path methods
-    jest.spyOn(path, 'resolve').mockReturnValue(mockConfigPath);
+    // Mock process.cwd to return a predictable path
+    jest.spyOn(process, 'cwd').mockReturnValue('/Users/patrick/Documents/Projects/OneNote To Notion Importer');
+    
+    // Mock path methods before creating ConfigService
+    jest.spyOn(path, 'resolve').mockImplementation((...args: string[]): string => {
+      if (args.length === 1) return args[0] || '';
+      return args.join('/');
+    });
     jest.spyOn(path, 'join').mockImplementation((...args) => args.join('/'));
     jest.spyOn(path, 'dirname').mockReturnValue(mockConfigDir);
+    
+    configService = new ConfigService();
   });
 
   describe('loadConfig', () => {
@@ -39,13 +46,24 @@ describe('ConfigService', () => {
         export: { outputDirectory: './custom-export' },
       };
       
-      mockedFs.existsSync.mockReturnValue(true);
+      // Mock existsSync to return false for local config, true for home config
+      mockedFs.existsSync.mockImplementation((path) => {
+        const pathStr = path.toString();
+        if (pathStr.includes('/Users/patrick/Documents/Projects/OneNote To Notion Importer/.onirc')) {
+          return false; // Local config doesn't exist
+        }
+        if (pathStr.includes('/Users/patrick/.onirc')) {
+          return true; // Home config exists
+        }
+        return false;
+      });
       mockedFs.readFileSync.mockReturnValue(JSON.stringify(mockConfig));
 
       const result = await configService.loadConfig();
 
-      expect(mockedFs.existsSync).toHaveBeenCalledWith(mockConfigPath);
-      expect(mockedFs.readFileSync).toHaveBeenCalledWith(mockConfigPath, 'utf8');
+      expect(mockedFs.existsSync).toHaveBeenCalledWith('/Users/patrick/Documents/Projects/OneNote To Notion Importer/.onirc');
+      expect(mockedFs.existsSync).toHaveBeenCalledWith('/Users/patrick/.onirc');
+      expect(mockedFs.readFileSync).toHaveBeenCalledWith('/Users/patrick/.onirc', 'utf8');
       expect(result.notion.workspaceId).toBe('test-workspace');
       expect(result.export.outputDirectory).toBe('./custom-export');
     });
@@ -55,7 +73,7 @@ describe('ConfigService', () => {
 
       const result = await configService.loadConfig();
 
-      expect(logger.warn).toHaveBeenCalledWith(`Configuration file not found at ${mockConfigPath}. Using defaults.`);
+      expect(logger.warn).toHaveBeenCalledWith(`Configuration file not found at /Users/patrick/.onirc. Using defaults.`);
       expect(result).toEqual({
         notion: { workspaceId: undefined, databaseId: undefined, apiKey: undefined },
         export: { outputDirectory: './exported', defaultFormat: 'markdown', preserveStructure: true, includeMetadata: true },
@@ -92,9 +110,9 @@ describe('ConfigService', () => {
 
       await configService.saveConfig(config);
 
-      expect(mockedFs.mkdirSync).toHaveBeenCalledWith(mockConfigDir, { recursive: true });
-      expect(mockedFs.writeFileSync).toHaveBeenCalledWith(mockConfigPath, JSON.stringify(config, null, 2));
-      expect(logger.info).toHaveBeenCalledWith(`Configuration saved to ${mockConfigPath}`);
+      expect(mockedFs.mkdirSync).toHaveBeenCalledWith('/Users/patrick', { recursive: true });
+      expect(mockedFs.writeFileSync).toHaveBeenCalledWith('/Users/patrick/Documents/Projects/OneNote To Notion Importer/.onirc', JSON.stringify(config, null, 2));
+      expect(logger.info).toHaveBeenCalledWith(`Configuration saved to /Users/patrick/Documents/Projects/OneNote To Notion Importer/.onirc`);
     });
 
     it('should handle save errors', async () => {

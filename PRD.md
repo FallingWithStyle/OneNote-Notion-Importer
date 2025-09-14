@@ -96,7 +96,7 @@
 
 ## 6. Epics and Stories
 ### Epic 1: Core CLI Infrastructure
-**Goal**: Build the foundational CLI tool with basic file processing capabilities
+**Goal**: Build the foundational CLI tool with basic file processing capabilities using Red-Green-Refactor TDD methodology
 
 #### Story 1.1: Project Setup and CLI Framework
 - **User Story**: As a developer, I want a working CLI tool structure, so that I can build the core functionality
@@ -119,7 +119,7 @@
 - **Dependencies**: Story 1.1
 
 ### Epic 2: Content Conversion
-**Goal**: Convert OneNote content to Notion-compatible formats
+**Goal**: Convert OneNote content to Notion-compatible formats using Red-Green-Refactor TDD methodology
 
 #### Story 2.1: Basic Content Conversion
 - **User Story**: As a user, I want OneNote content converted to markdown, so that it can be imported to Notion
@@ -142,7 +142,7 @@
 - **Dependencies**: Story 2.1
 
 ### Epic 3: Notion Integration
-**Goal**: Import converted content into Notion via API
+**Goal**: Import converted content into Notion via API using Red-Green-Refactor TDD methodology
 
 #### Story 3.1: Notion API Integration
 - **User Story**: As a user, I want to import content directly to Notion, so that I don't have to manually upload files
@@ -165,7 +165,7 @@
 - **Dependencies**: Story 3.1
 
 ### Epic 4: User Experience Enhancement
-**Goal**: Improve usability and provide advanced features
+**Goal**: Improve usability and provide advanced features using Red-Green-Refactor TDD methodology
 
 #### Story 4.1: Selection and Preview Features
 - **User Story**: As a user, I want to choose what to import and preview the results, so that I have control over the migration
@@ -217,7 +217,7 @@
   - Zero data loss during conversion
   - User satisfaction score > 4.0/5.0
 - **Quality Gates**: 
-  - All unit tests passing (TDD Red-Green-Refactor cycle)
+  - All unit tests passing (following Red-Green-Refactor TDD cycle as specified in epic goals)
   - Integration tests with sample OneNote files
   - Performance benchmarks met
   - Security audit completed

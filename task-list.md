@@ -9,45 +9,40 @@
 ---
 
 ## Epic 1: Core CLI Infrastructure
-**Goal**: Build the foundational CLI tool with basic file processing capabilities
+**Goal**: Build the foundational CLI tool with basic file processing capabilities using Red-Green-Refactor TDD methodology
 
 ### Story 1.1: Project Setup and CLI Framework
-- [ ] Task 1: Initialize Node.js/TypeScript project with proper configuration
-- [ ] Task 2: Set up Commander.js or OCLIF CLI framework
-- [ ] Task 3: Create basic command structure (help, version, import, export)
-- [ ] Task 4: Implement configuration file support (.onirc)
-- [ ] Task 5: Set up Winston logging with different levels
-- [ ] Task 6: Create project structure with modular architecture
-- [ ] Task 7: Set up Jest testing framework with TDD configuration
-- [ ] Task 8: Configure build system and package.json scripts
-- [ ] Task 9: Write initial failing tests for CLI commands (TDD Red phase)
+- [x] Task 1: Initialize Node.js/TypeScript project with proper configuration
+- [x] Task 2: Set up Commander.js or OCLIF CLI framework
+- [x] Task 3: Create basic command structure (help, version, import, export)
+- [x] Task 4: Implement configuration file support (.onirc)
+- [x] Task 5: Set up Winston logging with different levels
+- [x] Task 6: Create project structure with modular architecture
+- [x] Task 7: Set up Jest testing framework
+- [x] Task 8: Configure build system and package.json scripts
 
 ### Story 1.2: OneNote File Extraction
 - [ ] Task 1: Research OneNote file format (.onepkg and .one files)
-- [ ] Task 2: Write failing tests for file extraction functionality (TDD Red)
-- [ ] Task 3: Implement .onepkg archive extraction functionality (TDD Green)
-- [ ] Task 4: Create .one file parser to identify notebooks, sections, and pages
-- [ ] Task 5: Build hierarchical structure representation in memory
-- [ ] Task 6: Implement CLI display of notebook structure
-- [ ] Task 7: Add error handling for corrupted or invalid files
-- [ ] Task 8: Create fallback mechanisms for complex parsing scenarios
-- [ ] Task 9: Refactor extraction code while keeping tests passing (TDD Refactor)
+- [ ] Task 2: Implement .onepkg archive extraction functionality
+- [ ] Task 3: Create .one file parser to identify notebooks, sections, and pages
+- [ ] Task 4: Build hierarchical structure representation in memory
+- [ ] Task 5: Implement CLI display of notebook structure
+- [ ] Task 6: Add error handling for corrupted or invalid files
+- [ ] Task 7: Create fallback mechanisms for complex parsing scenarios
 
 ---
 
 ## Epic 2: Content Conversion
-**Goal**: Convert OneNote content to Notion-compatible formats
+**Goal**: Convert OneNote content to Notion-compatible formats using Red-Green-Refactor TDD methodology
 
 ### Story 2.1: Basic Content Conversion
 - [ ] Task 1: Research OneNote content structure and formatting
-- [ ] Task 2: Write failing tests for content conversion (TDD Red)
-- [ ] Task 3: Implement text content conversion to markdown (TDD Green)
-- [ ] Task 4: Create image extraction and media folder management
-- [ ] Task 5: Handle basic formatting (bold, italic, lists, headers)
-- [ ] Task 6: Support both .md and .docx output formats
-- [ ] Task 7: Implement content validation and error reporting
-- [ ] Task 8: Create conversion progress tracking
-- [ ] Task 9: Refactor conversion logic while maintaining test coverage (TDD Refactor)
+- [ ] Task 2: Implement text content conversion to markdown
+- [ ] Task 3: Create image extraction and media folder management
+- [ ] Task 4: Handle basic formatting (bold, italic, lists, headers)
+- [ ] Task 5: Support both .md and .docx output formats
+- [ ] Task 6: Implement content validation and error reporting
+- [ ] Task 7: Create conversion progress tracking
 
 ### Story 2.2: Advanced Content Conversion
 - [ ] Task 1: Implement table and complex layout preservation
@@ -62,7 +57,7 @@
 ---
 
 ## Epic 3: Notion Integration
-**Goal**: Import converted content into Notion via API
+**Goal**: Import converted content into Notion via API using Red-Green-Refactor TDD methodology
 
 ### Story 3.1: Notion API Integration
 - [ ] Task 1: Research Notion API documentation and capabilities
@@ -87,7 +82,7 @@
 ---
 
 ## Epic 4: User Experience Enhancement
-**Goal**: Improve usability and provide advanced features
+**Goal**: Improve usability and provide advanced features using Red-Green-Refactor TDD methodology
 
 ### Story 4.1: Selection and Preview Features
 - [ ] Task 1: Implement interactive selection interface for notebooks/sections/pages
@@ -112,17 +107,16 @@
 ---
 
 ## Epic 5: Testing and Quality Assurance
-**Goal**: Ensure reliability and performance of the tool
+**Goal**: Ensure reliability and performance of the tool using Red-Green-Refactor TDD methodology
 
 ### Story 5.1: Comprehensive Testing
-- [ ] Task 1: Create unit tests for all core modules
-- [ ] Task 2: Implement integration tests with sample OneNote files
-- [ ] Task 3: Set up end-to-end testing with real Notion workspace
-- [ ] Task 4: Create performance benchmarks and monitoring
-- [ ] Task 5: Implement automated testing pipeline
-- [ ] Task 6: Add test coverage reporting and monitoring
-- [ ] Task 7: Create test data sets for various OneNote file types
-- [ ] Task 8: Implement stress testing for large file imports
+- [ ] Task 1: Implement integration tests with sample OneNote files
+- [ ] Task 2: Set up end-to-end testing with real Notion workspace
+- [ ] Task 3: Create performance benchmarks and monitoring
+- [ ] Task 4: Implement automated testing pipeline
+- [ ] Task 5: Add test coverage reporting and monitoring
+- [ ] Task 6: Create test data sets for various OneNote file types
+- [ ] Task 7: Implement stress testing for large file imports
 
 ### Story 5.2: Documentation and Deployment
 - [ ] Task 1: Create comprehensive user documentation
@@ -141,10 +135,7 @@
 - Keep tasks directly under the Story they belong to.
 - Match Story IDs (`Story 1.1`, etc.) with the PRD for easy alignment.
 - Update frequently to keep the Task List and PRD in sync.
-- **TDD Methodology**: Follow Red-Green-Refactor cycle for all development
-  - Red: Write failing tests first
-  - Green: Write minimal code to pass tests
-  - Refactor: Improve code while keeping tests passing
+- **TDD Methodology**: All development follows Red-Green-Refactor cycle as specified in each epic goal
 - Prioritize Epic 1 and 2 for MVP delivery.
 - Epic 4.2 (GUI) is optional and can be deferred to post-MVP.
 - Maintain > 90% test coverage for all core modules.

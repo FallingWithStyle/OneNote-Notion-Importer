@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { logger } from '../utils/logger';
 import { ConfigService } from '../services/config.service';
+import { CommandHelpers } from '../utils/command-helpers';
 
 const configCommand = new Command('config');
 
@@ -50,8 +51,7 @@ configCommand
       configCommand.help();
       
     } catch (error) {
-      logger.error('Config command failed:', error);
-      throw error;
+      CommandHelpers.handleCommandError(error, 'Config');
     }
   });
 
