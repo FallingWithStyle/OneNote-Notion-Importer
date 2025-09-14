@@ -45,14 +45,14 @@
 - [x] Task 7: Create conversion progress tracking
 
 ### Story 2.2: Advanced Content Conversion
-- [ ] Task 1: Implement table and complex layout preservation
-- [ ] Task 2: Handle embedded files and attachments
-- [ ] Task 3: Convert OneNote tags to Notion properties
-- [ ] Task 4: Preserve page metadata (creation date, last modified)
-- [ ] Task 5: Implement advanced formatting (tables, code blocks, etc.)
-- [ ] Task 6: Create metadata mapping system
-- [ ] Task 7: Handle edge cases and complex content types
-- [ ] Task 8: Optimize conversion performance for large files
+- [x] Task 1: Implement table and complex layout preservation
+- [x] Task 2: Handle embedded files and attachments
+- [x] Task 3: Convert OneNote tags to Notion properties
+- [x] Task 4: Preserve page metadata (creation date, last modified)
+- [x] Task 5: Implement advanced formatting (tables, code blocks, etc.)
+- [x] Task 6: Create metadata mapping system
+- [x] Task 7: Handle edge cases and complex content types
+- [x] Task 8: Optimize conversion performance for large files
 
 ---
 
