@@ -11,6 +11,7 @@ configCommand
   .option('-s, --set <key=value>', 'Set a configuration value')
   .option('-g, --get <key>', 'Get a configuration value')
   .option('-l, --list', 'List all configuration values')
+  .option('-v, --validate', 'Validate configuration settings')
   .option('-c, --config <path>', 'Path to configuration file')
   .action(async (options) => {
     try {
@@ -44,6 +45,35 @@ configCommand
         const config = await configService.loadConfig(options.config);
         logger.info('Current configuration:');
         logger.info(JSON.stringify(config, null, 2));
+        return;
+      }
+
+      if (options.validate) {
+        logger.info('Validating configuration...');
+        const config = await configService.loadConfig(options.config);
+        
+        const validationErrors: string[] = [];
+        
+        // Validate Notion configuration
+        if (!config.notion?.apiKey) {
+          validationErrors.push('Notion API key is required (notion.apiKey)');
+        }
+        if (!config.notion?.workspaceId) {
+          validationErrors.push('Notion workspace ID is required (notion.workspaceId)');
+        }
+        
+        // Validate export configuration
+        if (!config.export?.outputDirectory) {
+          validationErrors.push('Export output directory is required (export.outputDirectory)');
+        }
+        
+        if (validationErrors.length > 0) {
+          logger.error('Configuration validation failed:');
+          validationErrors.forEach(error => logger.error(`  - ${error}`));
+          throw new Error('Configuration validation failed');
+        } else {
+          logger.info('Configuration is valid!');
+        }
         return;
       }
 
