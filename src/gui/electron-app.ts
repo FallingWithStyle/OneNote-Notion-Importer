@@ -75,7 +75,7 @@ export class ElectronApp {
    */
   loadReactApp(window: BrowserWindow, mode: 'development' | 'production'): void {
     if (mode === 'development') {
-      window.loadURL('http://localhost:3000');
+      window.loadURL('http://localhost:8020');
       window.webContents.openDevTools();
     } else {
       window.loadFile('dist/renderer/index.html');

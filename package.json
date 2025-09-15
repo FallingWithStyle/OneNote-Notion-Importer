@@ -13,7 +13,7 @@
     "dev": "ts-node src/index.ts",
     "dev:gui": "concurrently \"npm run dev:gui:renderer\" \"npm run dev:gui:electron\"",
     "dev:gui:renderer": "vite",
-    "dev:gui:electron": "wait-on http://localhost:3000 && electron dist/gui/main.js",
+    "dev:gui:electron": "wait-on http://localhost:8020 && electron dist/gui/main.js",
     "start": "node dist/index.js",
     "start:gui": "electron dist/gui/main.js",
     "test": "jest",

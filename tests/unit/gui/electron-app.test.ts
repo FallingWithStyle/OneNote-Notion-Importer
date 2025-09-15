@@ -42,7 +42,7 @@ describe('ElectronApp', () => {
 
       electronApp.loadReactApp(mockWindow as any, 'development');
 
-      expect(mockWindow.loadURL).toHaveBeenCalledWith('http://localhost:3000');
+      expect(mockWindow.loadURL).toHaveBeenCalledWith('http://localhost:8020');
       expect(mockWindow.webContents.openDevTools).toHaveBeenCalled();
     });
 
