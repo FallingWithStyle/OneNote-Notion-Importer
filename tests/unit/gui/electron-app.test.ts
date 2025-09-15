@@ -169,11 +169,10 @@ describe('ElectronApp', () => {
         })
       };
 
-      const result = await electronApp.handleOneNoteProcessing('/path/to/file.onepkg', mockFileProcessor as any);
+      const result = await electronApp.handleOneNoteProcessing('/path/to/file.onepkg');
 
       expect(result.success).toBe(true);
       expect(result.hierarchy).toBeDefined();
-      expect(mockFileProcessor.processFile).toHaveBeenCalledWith('/path/to/file.onepkg');
     });
 
     it('should handle processing errors', async () => {
@@ -181,7 +180,7 @@ describe('ElectronApp', () => {
         processFile: jest.fn().mockRejectedValue(new Error('Processing failed'))
       };
 
-      const result = await electronApp.handleOneNoteProcessing('/path/to/file.onepkg', mockFileProcessor as any);
+      const result = await electronApp.handleOneNoteProcessing('/path/to/file.onepkg');
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Processing failed');

@@ -1,4 +1,4 @@
-import { BrowserWindow, app, dialog, ipcMain, Menu, MenuItemConstructorOptions, OpenDialogReturnValue, SaveDialogReturnValue } from 'electron';
+import { BrowserWindow, app, dialog, ipcMain, Menu } from 'electron';
 import path from 'path';
 import { GuiImportService, ImportOptions, ImportProgress } from './services/gui-import.service';
 
@@ -36,7 +36,7 @@ export interface ImportResult {
 }
 
 export class ElectronApp {
-  private mainWindow: BrowserWindow | null = null;
+  private mainWindow: any = null;
   private importService: GuiImportService;
 
   constructor() {
@@ -46,7 +46,7 @@ export class ElectronApp {
   /**
    * Creates the main application window
    */
-  createWindow(options: WindowOptions = {}): BrowserWindow {
+  createWindow(options: WindowOptions = {}): any {
     const { width = 1200, height = 800, title = 'OneNote to Notion Importer' } = options;
 
     this.mainWindow = new BrowserWindow({
@@ -73,7 +73,7 @@ export class ElectronApp {
   /**
    * Loads the React application
    */
-  loadReactApp(window: BrowserWindow, mode: 'development' | 'production'): void {
+  loadReactApp(window: any, mode: 'development' | 'production'): void {
     if (mode === 'development') {
       window.loadURL('http://localhost:8020');
       window.webContents.openDevTools();
@@ -85,8 +85,8 @@ export class ElectronApp {
   /**
    * Sets up the application menu
    */
-  setupMenu(): Menu {
-    const template: MenuItemConstructorOptions[] = [
+  setupMenu(): any {
+    const template: any[] = [
       {
         label: 'File',
         submenu: [
@@ -338,7 +338,7 @@ export class ElectronApp {
   /**
    * Gets the main window instance
    */
-  getMainWindow(): BrowserWindow | null {
+  getMainWindow(): any {
     return this.mainWindow;
   }
 

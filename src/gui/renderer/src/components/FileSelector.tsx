@@ -11,7 +11,7 @@ export const FileSelector: React.FC<FileSelectorProps> = ({ onFileSelected }) =>
   const handleFileSelect = async () => {
     setIsLoading(true);
     try {
-      const result = await window.electronAPI?.openFileDialog();
+      const result = await (window as any).electronAPI?.openFileDialog();
       if (result?.success && result.filePath) {
         setFilePath(result.filePath);
         onFileSelected(result.filePath);

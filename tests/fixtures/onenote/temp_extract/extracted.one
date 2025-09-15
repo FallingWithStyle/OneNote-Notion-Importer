@@ -1,3 +1,3 @@
-OnePKG Test Notebook
-This is a test .onepkg file for general notebook testing.
-It contains mixed content for comprehensive testing.
+OnePKG Valid Test File
+This is a valid test .onepkg file for testing purposes.
+It should be processed successfully by the extraction service.

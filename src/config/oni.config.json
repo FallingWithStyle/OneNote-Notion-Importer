@@ -1,0 +1,32 @@
+{
+  "notion": {
+    "apiKey": "your-notion-api-key-here",
+    "databaseId": "26fd7f97404280468a0fd8078cb6ede9",
+    "baseUrl": "https://api.notion.com/v1"
+  },
+  "onenote": {
+    "supportedFormats": [".one", ".onepkg"],
+    "maxFileSize": 104857600,
+    "tempDir": "./temp"
+  },
+  "output": {
+    "format": "markdown",
+    "includeMetadata": true,
+    "preserveHierarchy": true
+  },
+  "logging": {
+    "level": "info",
+    "file": "./logs/oni.log",
+    "maxSize": "10MB",
+    "maxFiles": 5
+  },
+  "testing": {
+    "testDatabaseId": "26fd7f97404280468a0fd8078cb6ede9",
+    "generateTestData": true,
+    "performanceThresholds": {
+      "maxProcessingTime": 300000,
+      "maxMemoryUsage": 500000000,
+      "maxConcurrentOperations": 10
+    }
+  }
+}
