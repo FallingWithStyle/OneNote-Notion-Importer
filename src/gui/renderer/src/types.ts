@@ -44,21 +44,4 @@ export interface Configuration {
   };
 }
 
-// Electron API interface
-declare global {
-  interface Window {
-    electronAPI: {
-      openFileDialog: () => Promise<any>;
-      saveFileDialog: (filename: string) => Promise<any>;
-      processOneNoteFile: (filePath: string) => Promise<any>;
-      getConfig: (key: string) => Promise<any>;
-      setConfig: (key: string, value: any) => Promise<any>;
-      importToNotion: (options: any) => Promise<any>;
-      onMenuOpenFile: (callback: () => void) => void;
-      onMenuExportSettings: (callback: () => void) => void;
-      onMenuAbout: (callback: () => void) => void;
-      onMenuDocumentation: (callback: () => void) => void;
-      removeAllListeners: (channel: string) => void;
-    };
-  }
-}
+// Electron API interface is defined in preload.ts

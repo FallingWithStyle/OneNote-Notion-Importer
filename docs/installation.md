@@ -197,19 +197,40 @@ The configuration is stored in:
 }
 ```
 
-### Environment Variables
+### Environment Variables (Recommended)
 
-You can also use environment variables:
+For security, it's recommended to use environment variables instead of storing sensitive data in configuration files:
 
+#### Option 1: .env File (Recommended)
 ```bash
-# Set environment variables
-export NOTION_API_KEY="your-api-key"
-export NOTION_DATABASE_ID="your-database-id"
+# Copy the example file
+cp .env.example .env
 
-# Or create a .env file
-echo "NOTION_API_KEY=your-api-key" > .env
-echo "NOTION_DATABASE_ID=your-database-id" >> .env
+# Edit the .env file with your actual values
+nano .env
 ```
+
+The `.env` file should contain:
+```bash
+# Notion Configuration
+NOTION_API_KEY=your-notion-integration-token-here
+NOTION_WORKSPACE_ID=your-workspace-id-here
+NOTION_DATABASE_ID=your-database-id-here
+
+# Optional overrides
+LOG_LEVEL=info
+OUTPUT_DIR=./exports
+```
+
+#### Option 2: System Environment Variables
+```bash
+# Set environment variables in your shell
+export NOTION_API_KEY="your-api-key"
+export NOTION_WORKSPACE_ID="your-workspace-id"
+export NOTION_DATABASE_ID="your-database-id"
+```
+
+**Note:** Environment variables take precedence over configuration file values, providing a secure way to manage sensitive data.
 
 ## Verification
 

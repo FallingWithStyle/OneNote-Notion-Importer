@@ -65,8 +65,27 @@ oni import --file notebook.onepkg --workspace YOUR_WORKSPACE_ID --dry-run
 oni import --file notebook.onepkg --workspace YOUR_WORKSPACE_ID --select
 ```
 
-### Configuration File
+### Configuration
 
+#### Option 1: Environment Variables (Recommended)
+Create a `.env` file in your project directory:
+
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit with your actual values
+nano .env
+```
+
+The `.env` file should contain:
+```bash
+NOTION_API_KEY=your-notion-integration-token-here
+NOTION_WORKSPACE_ID=your-workspace-id-here
+NOTION_DATABASE_ID=your-database-id-here
+```
+
+#### Option 2: Configuration File
 Create a `.onenote2notionrc` file in your home directory:
 
 ```json

@@ -1,7 +1,7 @@
 {
   "notion": {
-    "apiKey": "your-notion-api-key-here",
-    "databaseId": "26fd7f97404280468a0fd8078cb6ede9",
+    "apiKey": "",
+    "databaseId": "",
     "baseUrl": "https://api.notion.com/v1"
   },
   "onenote": {
@@ -21,7 +21,7 @@
     "maxFiles": 5
   },
   "testing": {
-    "testDatabaseId": "26fd7f97404280468a0fd8078cb6ede9",
+    "testDatabaseId": "",
     "generateTestData": true,
     "performanceThresholds": {
       "maxProcessingTime": 300000,

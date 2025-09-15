@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
 import { logger } from '../utils/logger';
 
 export interface NotionConfig {
@@ -42,7 +43,26 @@ export class ConfigService {
   private configPath: string;
 
   constructor() {
+    // Load environment variables from .env file
+    this.loadEnvironmentVariables();
     this.configPath = this.getConfigPath();
+  }
+
+  private loadEnvironmentVariables(): void {
+    // Try to load .env file from current directory first, then project root
+    const envPaths = [
+      path.join(process.cwd(), '.env'),
+      path.join(__dirname, '../../.env'),
+      path.join(__dirname, '../../../.env')
+    ];
+
+    for (const envPath of envPaths) {
+      if (fs.existsSync(envPath)) {
+        dotenv.config({ path: envPath });
+        logger.debug(`Loaded environment variables from ${envPath}`);
+        break;
+      }
+    }
   }
 
   private getConfigPath(customPath?: string): string {
@@ -63,21 +83,24 @@ export class ConfigService {
 
   async loadConfig(customPath?: string): Promise<AppConfig> {
     const configFile = customPath ? path.resolve(customPath) : this.configPath;
+    let userConfig: Partial<AppConfig> = {};
     
     try {
       if (fs.existsSync(configFile)) {
         const configData = fs.readFileSync(configFile, 'utf8');
-        const userConfig = JSON.parse(configData);
-        
-        // Merge with default config
-        return this.mergeConfig(this.defaultConfig, userConfig);
+        userConfig = JSON.parse(configData);
+      } else {
+        logger.warn(`Configuration file not found at ${configFile}. Using defaults and environment variables.`);
       }
       
-      logger.warn(`Configuration file not found at ${configFile}. Using defaults.`);
-      return this.defaultConfig;
+      // Merge with default config
+      const mergedConfig = this.mergeConfig(this.defaultConfig, userConfig);
+      
+      // Override with environment variables if they exist
+      return this.applyEnvironmentOverrides(mergedConfig);
     } catch (error) {
       logger.error(`Error loading configuration: ${error}`);
-      return this.defaultConfig;
+      return this.applyEnvironmentOverrides(this.defaultConfig);
     }
   }
 
@@ -147,5 +170,32 @@ export class ConfigService {
       export: { ...defaultConfig.export, ...userConfig.export },
       logging: { ...defaultConfig.logging, ...userConfig.logging },
     };
+  }
+
+  public applyEnvironmentOverrides(config: AppConfig): AppConfig {
+    const overriddenConfig = { ...config };
+
+    // Override Notion configuration from environment variables
+    if (process.env.NOTION_API_KEY) {
+      overriddenConfig.notion.apiKey = process.env.NOTION_API_KEY;
+    }
+    if (process.env.NOTION_WORKSPACE_ID) {
+      overriddenConfig.notion.workspaceId = process.env.NOTION_WORKSPACE_ID;
+    }
+    if (process.env.NOTION_DATABASE_ID) {
+      overriddenConfig.notion.databaseId = process.env.NOTION_DATABASE_ID;
+    }
+
+    // Override export configuration from environment variables
+    if (process.env.OUTPUT_DIR) {
+      overriddenConfig.export.outputDirectory = process.env.OUTPUT_DIR;
+    }
+
+    // Override logging configuration from environment variables
+    if (process.env.LOG_LEVEL && ['error', 'warn', 'info', 'debug'].includes(process.env.LOG_LEVEL)) {
+      overriddenConfig.logging.level = process.env.LOG_LEVEL as 'error' | 'warn' | 'info' | 'debug';
+    }
+
+    return overriddenConfig;
   }
 }

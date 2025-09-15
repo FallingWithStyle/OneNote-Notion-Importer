@@ -3,7 +3,7 @@ import { NotionApiService } from '../../services/notion/notion-api.service';
 import { HierarchyMappingService } from '../../services/notion/hierarchy-mapping.service';
 import { AdvancedContentConverterService } from '../../services/onenote/advanced-content-converter.service';
 import { ConfigService } from '../../services/config.service';
-import { OneNoteHierarchy, OneNoteNotebook, OneNoteSection, OneNotePage } from '../renderer/src/types';
+import { OneNoteHierarchy, OneNoteNotebook, OneNoteSection, OneNotePage } from '../../types/onenote';
 import { logger } from '../../utils/logger';
 
 export interface ImportOptions {
@@ -88,7 +88,7 @@ export class GuiImportService {
         throw new Error('No hierarchy data extracted from OneNote files');
       }
 
-      // Convert to GUI hierarchy format
+      // Convert to correct hierarchy format
       const guiHierarchy: OneNoteHierarchy = {
         notebooks: extractionResult.hierarchy.notebooks.map(nb => ({
           id: nb.id,
@@ -100,10 +100,17 @@ export class GuiImportService {
               id: page.id,
               title: page.title,
               content: page.content,
-              lastModified: page.lastModifiedDate,
-              created: page.createdDate
-            }))
-          }))
+              createdDate: page.createdDate,
+              lastModifiedDate: page.lastModifiedDate,
+              metadata: page.metadata || {}
+            })),
+            createdDate: section.createdDate,
+            lastModifiedDate: section.lastModifiedDate,
+            metadata: section.metadata || {}
+          })),
+          createdDate: nb.createdDate,
+          lastModifiedDate: nb.lastModifiedDate,
+          metadata: nb.metadata || {}
         })),
         totalNotebooks: extractionResult.hierarchy.notebooks.length,
         totalSections: extractionResult.hierarchy.notebooks.reduce((sum, nb) => sum + nb.sections.length, 0),
@@ -194,7 +201,7 @@ export class GuiImportService {
       await this.notionApiService.initialize({
         integrationToken: config.notion.apiKey || '',
         workspaceId: options.workspaceId,
-        databaseId: options.databaseId
+        databaseId: options.databaseId || ''
       });
 
       // Test connection
@@ -273,10 +280,10 @@ export class GuiImportService {
                 properties: convertedPage.metadata || {},
                 children: [],
                 metadata: {
-                  createdDate: page.created || new Date(),
-                  lastModifiedDate: page.lastModified || new Date()
+                  createdDate: page.createdDate,
+                  lastModifiedDate: page.lastModifiedDate
                 }
-              }, options.workspaceId);
+              });
 
               successCount++;
               logger.debug(`Created page: ${page.title} (ID: ${notionPageId})`);

@@ -11,10 +11,22 @@ export const FileSelector: React.FC<FileSelectorProps> = ({ onFileSelected }) =>
   const handleFileSelect = async () => {
     setIsLoading(true);
     try {
-      const result = await (window as any).electronAPI?.openFileDialog();
+      console.log('Opening file dialog...');
+      console.log('electronAPI available:', !!window.electronAPI);
+      
+      if (!window.electronAPI) {
+        throw new Error('Electron API not available');
+      }
+      
+      const result = await window.electronAPI.openFileDialog();
+      console.log('File dialog result:', result);
+      
       if (result?.success && result.filePath) {
         setFilePath(result.filePath);
         onFileSelected(result.filePath);
+        console.log('File selected:', result.filePath);
+      } else {
+        console.log('No file selected or error:', result?.error);
       }
     } catch (error) {
       console.error('Error selecting file:', error);

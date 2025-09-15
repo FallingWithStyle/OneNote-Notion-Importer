@@ -113,12 +113,26 @@ ONI uses a configuration file located at `~/.oni/config.json` (or `%APPDATA%\.on
 }
 ```
 
-### Environment Variables
-You can also use environment variables:
+### Environment Variables (Recommended)
+For better security, use environment variables instead of storing sensitive data in configuration files:
+
+#### Using .env File
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit with your actual values
+nano .env
+```
+
+#### Using System Environment Variables
 ```bash
 export NOTION_API_KEY="your-api-key"
+export NOTION_WORKSPACE_ID="your-workspace-id"
 export NOTION_DATABASE_ID="your-database-id"
 ```
+
+**Note:** Environment variables override configuration file values, providing a secure way to manage API keys and workspace IDs.
 
 ## Command Reference
 

@@ -192,7 +192,7 @@ export class ElectronApp {
         properties: ['openFile']
       });
 
-      // Handle different return types based on Electron version
+      // Handle the dialog result - it can be either an array of strings or an object
       if (Array.isArray(result)) {
         if (result.length === 0) {
           return { success: false, error: 'No file selected' };
@@ -200,12 +200,13 @@ export class ElectronApp {
         return { success: true, filePath: result[0] || '' };
       } else {
         const dialogResult = result as any;
-        if (dialogResult.canceled) {
+        if (dialogResult.canceled || !dialogResult.filePaths || dialogResult.filePaths.length === 0) {
           return { success: false, error: 'No file selected' };
         }
-        return { success: true, filePath: dialogResult.filePaths?.[0] || '' };
+        return { success: true, filePath: dialogResult.filePaths[0] };
       }
     } catch (error) {
+      console.error('Error in handleFileOpen:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error)
@@ -227,7 +228,7 @@ export class ElectronApp {
         ]
       });
 
-      // Handle different return types based on Electron version
+      // Handle the dialog result - it can be either a string or an object
       if (typeof result === 'string') {
         if (result === '') {
           return { success: false, error: 'Save cancelled' };
@@ -235,12 +236,13 @@ export class ElectronApp {
         return { success: true, filePath: result };
       } else {
         const dialogResult = result as any;
-        if (dialogResult.canceled) {
+        if (dialogResult.canceled || !dialogResult.filePath) {
           return { success: false, error: 'Save cancelled' };
         }
-        return { success: true, filePath: dialogResult.filePath || '' };
+        return { success: true, filePath: dialogResult.filePath };
       }
     } catch (error) {
+      console.error('Error in handleFileSave:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error)

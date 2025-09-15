@@ -1,5 +1,27 @@
 #!/usr/bin/env node
 
+// Load environment variables early
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Try to load .env file from multiple locations
+const envPaths = [
+  path.join(process.cwd(), '.env'),
+  path.join(__dirname, '../.env'),
+  path.join(__dirname, '../../.env')
+];
+
+for (const envPath of envPaths) {
+  try {
+    if (require('fs').existsSync(envPath)) {
+      dotenv.config({ path: envPath });
+      break;
+    }
+  } catch (error) {
+    // Continue to next path if this one fails
+  }
+}
+
 import { Command } from 'commander';
 import { logger } from './utils/logger';
 import { version } from '../package.json';
