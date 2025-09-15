@@ -169,7 +169,7 @@ describe('Command Integration Tests', () => {
       
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Configuration validation failed');
-      expect(result.stderr).toContain('Notion API token is required');
+      expect(result.stderr).toContain('Notion API key is required');
     }, testTimeout);
 
     it('should handle invalid set format', async () => {

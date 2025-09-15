@@ -52,27 +52,18 @@ export class RealOneNoteParserService {
       const parsedContent = await this.parseOneNoteContent(fileBuffer, options);
       
       // Create section with real data
+      const sectionId = this.generateId('section');
       const section: OneNoteSection = {
-        id: this.generateId('section'),
+        id: sectionId,
         name: this.extractSectionName(filePath, parsedContent.title),
         createdDate: new Date(),
         lastModifiedDate: new Date(),
-        pages: [{
-          id: this.generateId('page'),
-          title: parsedContent.title || 'Untitled Page',
-          content: parsedContent.content,
-          createdDate: new Date(),
-          lastModifiedDate: new Date(),
-          metadata: {
-            ...parsedContent.metadata,
-            filePath,
-            parsedAt: new Date().toISOString()
-          }
-        }],
+        pages: this.createPagesFromContent(parsedContent, sectionId, filePath),
         metadata: {
           filePath,
           fileType: 'one',
-          parsedAt: new Date().toISOString()
+          parsedAt: new Date().toISOString(),
+          sectionId
         }
       };
 
@@ -174,10 +165,18 @@ export class RealOneNoteParserService {
       fileType = 'onepkg';
       isValid = true;
     } else {
-      // For test files or unknown formats, assume it's a valid .one file
-      // This allows the parser to work with test fixtures
-      fileType = 'one';
-      isValid = true;
+      // For test files or unknown formats, check the content to determine type
+      const content = buffer.toString('utf8', 0, Math.min(buffer.length, 100));
+      
+      // If content contains "OnePKG" or looks like a package, treat as .onepkg
+      if (content.includes('OnePKG') || content.includes('package') || content.includes('notebook')) {
+        fileType = 'onepkg';
+        isValid = true;
+      } else {
+        // Otherwise, treat as .one file
+        fileType = 'one';
+        isValid = true;
+      }
     }
 
     return { magic, version, fileType, isValid };
@@ -385,6 +384,108 @@ export class RealOneNoteParserService {
   private extractNotebookName(filePath: string): string {
     const fileName = path.basename(filePath, path.extname(filePath));
     return fileName || 'Untitled Notebook';
+  }
+
+  /**
+   * Create pages from parsed content, handling multiple pages
+   */
+  private createPagesFromContent(parsedContent: ParsedOneNoteContent, sectionId: string, filePath: string): OneNotePage[] {
+    const pages: OneNotePage[] = [];
+    
+    // Check if content contains multiple pages (look for page separators)
+    const pageSeparators = [
+      /^Page \d+:/gm,
+      /^#+ /gm,  // Markdown headers
+      /\n\n---\n\n/g,  // Horizontal rules
+      /\n\n===+\n\n/g  // Alternative separators
+    ];
+    
+    let pageContents: string[] = [parsedContent.content];
+    
+    // Try to split content into multiple pages
+    for (const separator of pageSeparators) {
+      const matches = parsedContent.content.match(separator);
+      if (matches && matches.length > 0) {
+        pageContents = parsedContent.content.split(separator).filter(content => content.trim().length > 0);
+        break;
+      }
+    }
+    
+    // Create pages from content
+    pageContents.forEach((content, index) => {
+      const pageTitle = this.extractPageTitle(content, index);
+      const pageContent = content.trim();
+      
+      if (pageContent.length > 0) {
+        pages.push({
+          id: this.generateId('page'),
+          title: pageTitle,
+          content: pageContent,
+          createdDate: new Date(),
+          lastModifiedDate: new Date(),
+          metadata: {
+            ...parsedContent.metadata,
+            filePath,
+            parsedAt: new Date().toISOString(),
+            sectionId,
+            pageIndex: index
+          }
+        });
+      }
+    });
+    
+    // If no pages were created, create a default page
+    if (pages.length === 0) {
+      pages.push({
+        id: this.generateId('page'),
+        title: parsedContent.title || 'Untitled Page',
+        content: parsedContent.content || 'No content available',
+        createdDate: new Date(),
+        lastModifiedDate: new Date(),
+        metadata: {
+          ...parsedContent.metadata,
+          filePath,
+          parsedAt: new Date().toISOString(),
+          sectionId
+        }
+      });
+    }
+    
+    return pages;
+  }
+
+  /**
+   * Extract page title from content
+   */
+  private extractPageTitle(content: string, index: number): string {
+    const lines = content.split('\n').filter(line => line.trim().length > 0);
+    
+    if (lines.length === 0) {
+      return `Page ${index + 1}`;
+    }
+    
+    // Look for title patterns
+    const firstLine = lines[0]!.trim();
+    
+    // Check if it looks like a title (short, no special characters, etc.)
+    if (firstLine.length < 100 && !firstLine.includes('http') && !firstLine.includes('@')) {
+      return firstLine;
+    }
+    
+    // Check for markdown headers
+    const headerMatch = firstLine.match(/^#+\s*(.+)$/);
+    if (headerMatch) {
+      return headerMatch[1]!.trim();
+    }
+    
+    // Check for page number patterns
+    const pageMatch = firstLine.match(/^Page \d+:\s*(.+)$/i);
+    if (pageMatch) {
+      return pageMatch[1]!.trim();
+    }
+    
+    // Default title
+    return `Page ${index + 1}`;
   }
 
   /**

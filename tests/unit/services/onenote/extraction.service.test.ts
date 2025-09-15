@@ -24,6 +24,7 @@ describe('OneNoteExtractionService', () => {
       // Act
       const result = await service.extractFromOnepkg(onepkgPath);
 
+
       // Assert
       expect(result.success).toBe(true);
       expect(result.hierarchy).toBeDefined();

@@ -207,11 +207,13 @@ export class OneNoteParserService implements IOneNoteParserService {
       const stats = fs.statSync(filePath);
       
       // Extract real metadata from file
+      const sectionId = this.generateId('section');
       const metadata: Record<string, any> = {
         createdDate: stats.birthtime,
         lastModifiedDate: stats.mtime,
         fileSize: stats.size,
         filePath,
+        sectionId,
         extractedAt: new Date().toISOString()
       };
 

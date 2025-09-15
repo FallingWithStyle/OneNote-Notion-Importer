@@ -24,7 +24,7 @@ winston.addColors(colors);
 
 // Define which transports the logger must use
 const transports = [
-  // Console transport
+  // Console transport for all levels
   new winston.transports.Console({
     format: winston.format.combine(
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),

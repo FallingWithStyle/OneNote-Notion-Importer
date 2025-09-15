@@ -171,7 +171,9 @@ importCommand
       CommandHelpers.logCommandSuccess('import', 'Import');
       
     } catch (error) {
-      CommandHelpers.handleCommandError(error, 'Import');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Import failed: ${errorMessage}`);
+      process.exit(1);
     }
   });
 

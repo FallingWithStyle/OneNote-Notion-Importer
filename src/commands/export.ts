@@ -190,7 +190,9 @@ exportCommand
       CommandHelpers.logCommandSuccess('export', 'Export');
       
     } catch (error) {
-      CommandHelpers.handleCommandError(error, 'Export');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Export failed: ${errorMessage}`);
+      process.exit(1);
     }
   });
 

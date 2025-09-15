@@ -68,9 +68,9 @@ configCommand
         }
         
         if (validationErrors.length > 0) {
-          logger.error('Configuration validation failed:');
-          validationErrors.forEach(error => logger.error(`  - ${error}`));
-          throw new Error('Configuration validation failed');
+          const errorMessage = `Configuration validation failed\n${validationErrors.map(error => `  - ${error}`).join('\n')}`;
+          logger.error(errorMessage);
+          throw new Error(errorMessage);
         } else {
           logger.info('Configuration is valid!');
         }
@@ -81,7 +81,9 @@ configCommand
       configCommand.help();
       
     } catch (error) {
-      CommandHelpers.handleCommandError(error, 'Config');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Config failed: ${errorMessage}`);
+      process.exit(1);
     }
   });
 
