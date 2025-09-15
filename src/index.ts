@@ -29,7 +29,7 @@ function setupGlobalErrorHandling(): void {
  */
 function isSuccessfulExitError(error: unknown): boolean {
   return error instanceof Error && 
-         error.message && 
+         typeof error.message === 'string' && 
          (error.message.includes('outputHelp') || error.message.includes(version));
 }
 

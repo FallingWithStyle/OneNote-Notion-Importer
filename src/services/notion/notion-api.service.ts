@@ -20,10 +20,10 @@ export interface NotionPage {
   id: string;
   title: string;
   content: string;
-  properties?: Record<string, any>;
-  children?: NotionPage[];
-  parentId?: string;
-  metadata?: Record<string, any>;
+  properties?: Record<string, any> | undefined;
+  children?: NotionPage[] | undefined;
+  parentId?: string | undefined;
+  metadata?: Record<string, any> | undefined;
 }
 
 export interface NotionDatabase {
