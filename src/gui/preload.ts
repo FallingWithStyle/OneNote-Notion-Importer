@@ -12,6 +12,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getConfig: (key: string) => ipcRenderer.invoke('get-config', key),
   setConfig: (key: string, value: any) => ipcRenderer.invoke('set-config', key, value),
 
+  // Import operations
+  importToNotion: (options: any) => ipcRenderer.invoke('import-to-notion', options),
+
   // Menu events
   onMenuOpenFile: (callback: () => void) => ipcRenderer.on('menu-open-file', callback),
   onMenuExportSettings: (callback: () => void) => ipcRenderer.on('menu-export-settings', callback),

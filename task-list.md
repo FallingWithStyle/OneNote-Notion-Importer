@@ -85,24 +85,24 @@
 **Goal**: Improve usability and provide advanced features using Red-Green-Refactor TDD methodology
 
 ### Story 4.1: Selection and Preview Features
-- [ ] Task 1: Implement interactive selection interface for notebooks/sections/pages
-- [ ] Task 2: Create dry-run mode with detailed preview output
-- [ ] Task 3: Build content preview functionality before import
-- [ ] Task 4: Enhance logging system with detailed error reporting
-- [ ] Task 5: Create progress indicators and status updates
-- [ ] Task 6: Implement configuration validation and helpful error messages
-- [ ] Task 7: Add support for batch operations and file selection
-- [ ] Task 8: Create user-friendly CLI help and documentation
+- [x] Task 1: Implement interactive selection interface for notebooks/sections/pages
+- [x] Task 2: Create dry-run mode with detailed preview output
+- [x] Task 3: Build content preview functionality before import
+- [x] Task 4: Enhance logging system with detailed error reporting
+- [x] Task 5: Create progress indicators and status updates
+- [x] Task 6: Implement configuration validation and helpful error messages
+- [x] Task 7: Add support for batch operations and file selection
+- [x] Task 8: Create user-friendly CLI help and documentation
 
 ### Story 4.2: GUI Wrapper (Optional)
-- [ ] Task 1: Set up Electron application with React frontend
-- [ ] Task 2: Create tree view component for notebook/section/page selection
-- [ ] Task 3: Implement progress indicators and status updates in GUI
-- [ ] Task 4: Build configuration management interface
-- [ ] Task 5: Create file selection and drag-drop functionality
-- [ ] Task 6: Integrate GUI with existing CLI core logic
-- [ ] Task 7: Implement real-time logging display in GUI
-- [ ] Task 8: Add GUI-specific error handling and user feedback
+- [x] Task 1: Set up Electron application with React frontend
+- [x] Task 2: Create tree view component for notebook/section/page selection
+- [x] Task 3: Implement progress indicators and status updates in GUI
+- [x] Task 4: Build configuration management interface
+- [x] Task 5: Create file selection and drag-drop functionality
+- [x] Task 6: Integrate GUI with existing CLI core logic
+- [x] Task 7: Implement real-time logging display in GUI
+- [x] Task 8: Add GUI-specific error handling and user feedback
 
 ---
 

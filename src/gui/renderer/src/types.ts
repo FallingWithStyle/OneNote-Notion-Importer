@@ -48,11 +48,17 @@ export interface Configuration {
 declare global {
   interface Window {
     electronAPI: {
-      openFileDialog: () => Promise<{ success: boolean; filePath?: string; error?: string }>;
-      saveFileDialog: (filename: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
-      processOneNoteFile: (filePath: string) => Promise<{ success: boolean; hierarchy?: OneNoteHierarchy; error?: string }>;
-      getConfig: (key: string) => Promise<{ success: boolean; value?: any; error?: string }>;
-      setConfig: (key: string, value: any) => Promise<{ success: boolean; error?: string }>;
+      openFileDialog: () => Promise<any>;
+      saveFileDialog: (filename: string) => Promise<any>;
+      processOneNoteFile: (filePath: string) => Promise<any>;
+      getConfig: (key: string) => Promise<any>;
+      setConfig: (key: string, value: any) => Promise<any>;
+      importToNotion: (options: any) => Promise<any>;
+      onMenuOpenFile: (callback: () => void) => void;
+      onMenuExportSettings: (callback: () => void) => void;
+      onMenuAbout: (callback: () => void) => void;
+      onMenuDocumentation: (callback: () => void) => void;
+      removeAllListeners: (channel: string) => void;
     };
   }
 }

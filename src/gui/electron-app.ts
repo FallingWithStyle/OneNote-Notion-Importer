@@ -1,5 +1,6 @@
 import { BrowserWindow, app, dialog, ipcMain, Menu, MenuItemConstructorOptions, OpenDialogReturnValue, SaveDialogReturnValue } from 'electron';
 import path from 'path';
+import { GuiImportService, ImportOptions, ImportProgress } from './services/gui-import.service';
 
 export interface WindowOptions {
   width?: number;
@@ -25,8 +26,22 @@ export interface ConfigResult {
   error?: string;
 }
 
+export interface ImportResult {
+  success: boolean;
+  totalPages: number;
+  successCount: number;
+  errorCount: number;
+  errors: string[];
+  message: string;
+}
+
 export class ElectronApp {
   private mainWindow: BrowserWindow | null = null;
+  private importService: GuiImportService;
+
+  constructor() {
+    this.importService = new GuiImportService();
+  }
 
   /**
    * Creates the main application window
@@ -145,9 +160,7 @@ export class ElectronApp {
     });
 
     ipcMainInstance.handle('process-onenote-file', async (_event: any, filePath: string) => {
-      // This would be injected from the main process
-      const fileProcessor = (global as any).fileProcessor;
-      return await this.handleOneNoteProcessing(filePath, fileProcessor);
+      return await this.handleOneNoteProcessing(filePath);
     });
 
     ipcMainInstance.handle('get-config', async (_event: any, key: string) => {
@@ -158,6 +171,10 @@ export class ElectronApp {
     ipcMainInstance.handle('set-config', async (_event: any, key: string, value: any) => {
       const configService = (global as any).configService;
       return await this.handleConfigSet(key, value, configService);
+    });
+
+    ipcMainInstance.handle('import-to-notion', async (_event: any, options: ImportOptions) => {
+      return await this.handleImportToNotion(options);
     });
   }
 
@@ -234,14 +251,33 @@ export class ElectronApp {
   /**
    * Handles OneNote file processing
    */
-  async handleOneNoteProcessing(filePath: string, fileProcessor: any): Promise<OneNoteProcessingResult> {
+  async handleOneNoteProcessing(filePath: string): Promise<OneNoteProcessingResult> {
     try {
-      const result = await fileProcessor.processFile(filePath);
+      const result = await this.importService.processFile(filePath);
       return result;
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error)
+      };
+    }
+  }
+
+  /**
+   * Handles import to Notion
+   */
+  async handleImportToNotion(options: ImportOptions): Promise<ImportResult> {
+    try {
+      const result = await this.importService.importToNotion(options);
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        totalPages: 0,
+        successCount: 0,
+        errorCount: 1,
+        errors: [error instanceof Error ? error.message : String(error)],
+        message: `Import failed: ${error instanceof Error ? error.message : String(error)}`
       };
     }
   }

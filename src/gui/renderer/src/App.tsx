@@ -12,32 +12,34 @@ const App: React.FC = () => {
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>('idle');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [config, setConfig] = useState<any>({});
+  const [currentFilePath, setCurrentFilePath] = useState<string>('');
 
   useEffect(() => {
     // Load initial configuration
-    window.electronAPI?.getConfig('notion.workspaceId').then((result) => {
+    window.electronAPI?.getConfig('notion.workspaceId').then((result: any) => {
       if (result.success) {
-        setConfig(prev => ({ ...prev, workspaceId: result.value }));
+        setConfig((prev: any) => ({ ...prev, workspaceId: result.value }));
       }
     });
   }, []);
 
   const handleFileSelected = async (filePath: string) => {
     setProcessingStatus('processing');
-    setLogs(prev => [...prev, { level: 'info', message: `Processing file: ${filePath}`, timestamp: new Date() }]);
+    setCurrentFilePath(filePath);
+    setLogs((prev: LogEntry[]) => [...prev, { level: 'info', message: `Processing file: ${filePath}`, timestamp: new Date() }]);
     
     try {
       const result = await window.electronAPI?.processOneNoteFile(filePath);
       if (result?.success && result.hierarchy) {
         setHierarchy(result.hierarchy);
         setProcessingStatus('completed');
-        setLogs(prev => [...prev, { level: 'success', message: 'File processed successfully', timestamp: new Date() }]);
+        setLogs((prev: LogEntry[]) => [...prev, { level: 'success', message: 'File processed successfully', timestamp: new Date() }]);
       } else {
         throw new Error(result?.error || 'Failed to process file');
       }
     } catch (error) {
       setProcessingStatus('error');
-      setLogs(prev => [...prev, { 
+      setLogs((prev: LogEntry[]) => [...prev, { 
         level: 'error', 
         message: `Error processing file: ${error instanceof Error ? error.message : String(error)}`, 
         timestamp: new Date() 
@@ -53,13 +55,45 @@ const App: React.FC = () => {
     if (!hierarchy || selectedItems.length === 0) return;
     
     setProcessingStatus('importing');
-    setLogs(prev => [...prev, { level: 'info', message: 'Starting import to Notion...', timestamp: new Date() }]);
+    setLogs((prev: LogEntry[]) => [...prev, { level: 'info', message: 'Starting import to Notion...', timestamp: new Date() }]);
     
-    // TODO: Implement actual import logic
-    setTimeout(() => {
-      setProcessingStatus('completed');
-      setLogs(prev => [...prev, { level: 'success', message: 'Import completed successfully', timestamp: new Date() }]);
-    }, 2000);
+    try {
+      const importOptions = {
+        filePath: currentFilePath,
+        workspaceId: config.workspaceId || '',
+        databaseId: config.databaseId,
+        selectedItems: selectedItems,
+        dryRun: false
+      };
+
+      const result = await window.electronAPI?.importToNotion(importOptions);
+      
+      if (result?.success) {
+        setProcessingStatus('completed');
+        setLogs((prev: LogEntry[]) => [...prev, { 
+          level: 'success', 
+          message: `Import completed: ${result.successCount}/${result.totalPages} pages imported successfully`, 
+          timestamp: new Date() 
+        }]);
+        
+        if (result.errorCount > 0) {
+          setLogs((prev: LogEntry[]) => [...prev, { 
+            level: 'warning', 
+            message: `${result.errorCount} pages failed to import`, 
+            timestamp: new Date() 
+          }]);
+        }
+      } else {
+        throw new Error(result?.message || 'Import failed');
+      }
+    } catch (error) {
+      setProcessingStatus('error');
+      setLogs((prev: LogEntry[]) => [...prev, { 
+        level: 'error', 
+        message: `Import failed: ${error instanceof Error ? error.message : String(error)}`, 
+        timestamp: new Date() 
+      }]);
+    }
   };
 
   return (
