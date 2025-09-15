@@ -6,6 +6,7 @@
 import { OneNoteExtractionResult, OneNoteFileInfo, OneNoteParsingOptions, OneNoteHierarchy, OneNoteNotebook, OneNoteSection, OneNotePage } from '../../types/onenote';
 import { OneNoteMockDataFactory } from './mock-data.factory';
 import { OneNoteErrorUtils, OneNoteError } from './error-utils';
+import { RealOneNoteParserService } from './real-onenote-parser.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -43,6 +44,12 @@ export interface IOneNoteExtractionService {
 }
 
 export class OneNoteExtractionService implements IOneNoteExtractionService {
+  private realParser: RealOneNoteParserService;
+
+  constructor() {
+    this.realParser = new RealOneNoteParserService();
+  }
+
   async extractFromOnepkg(filePath: string, options?: OneNoteParsingOptions): Promise<OneNoteExtractionResult> {
     try {
       // Check if file exists
@@ -59,13 +66,15 @@ export class OneNoteExtractionService implements IOneNoteExtractionService {
         });
       }
 
-      // Mock extraction for valid files
-      const mockHierarchy = OneNoteMockDataFactory.createMockHierarchy();
+      // Use real parser to extract content
+      const hierarchy = await this.realParser.parseOnepkgFile(filePath, options);
 
       return {
         success: true,
-        hierarchy: mockHierarchy,
-        extractedFiles: ['section1.one', 'section2.one']
+        hierarchy,
+        extractedFiles: hierarchy.notebooks.flatMap(nb => 
+          nb.sections.map(section => `${section.id}.one`)
+        )
       };
     } catch (error) {
       // Re-throw file not found errors for tests
@@ -92,12 +101,31 @@ export class OneNoteExtractionService implements IOneNoteExtractionService {
         });
       }
 
-      // Mock extraction for valid .one files
-      const mockHierarchy = OneNoteMockDataFactory.createMockHierarchy();
+      // Use real parser to extract content
+      const section = await this.realParser.parseOneFile(filePath, options);
+      
+      // Create hierarchy with the parsed section
+      const hierarchy: OneNoteHierarchy = {
+        notebooks: [{
+          id: this.generateId('notebook'),
+          name: this.extractNotebookName(filePath),
+          createdDate: new Date(),
+          lastModifiedDate: new Date(),
+          sections: [section],
+          metadata: {
+            filePath,
+            fileType: 'one',
+            parsedAt: new Date().toISOString()
+          }
+        }],
+        totalNotebooks: 1,
+        totalSections: 1,
+        totalPages: section.pages.length
+      };
 
       return {
         success: true,
-        hierarchy: mockHierarchy
+        hierarchy
       };
     } catch (error) {
       return OneNoteErrorUtils.createErrorResponse(error as Error, { filePath, operation: 'extractFromOne' });
@@ -140,76 +168,71 @@ export class OneNoteExtractionService implements IOneNoteExtractionService {
   async extractMultiple(filePaths: string[], options?: OneNoteParsingOptions): Promise<OneNoteExtractionResult> {
     try {
       if (filePaths.length === 0) {
-        return OneNoteMockDataFactory.createMockExtractionResult({
-          hierarchy: OneNoteMockDataFactory.createMockHierarchy({
+        return {
+          success: true,
+          hierarchy: {
             notebooks: [],
             totalNotebooks: 0,
             totalSections: 0,
             totalPages: 0
-          })
-        });
-      }
-
-      // Check for corrupted files - handle mixed valid and corrupted files
-      const corruptedFiles = filePaths.filter(fp => path.basename(fp).includes('corrupted'));
-      const validFiles = filePaths.filter(fp => !path.basename(fp).includes('corrupted'));
-      
-      if (corruptedFiles.length > 0 && validFiles.length > 0) {
-        // Return partial success with fallback for mixed files
-        const mockHierarchy = OneNoteMockDataFactory.createMockHierarchy({
-          notebooks: [OneNoteMockDataFactory.createMockNotebook({
-            id: 'notebook-1',
-            name: 'Valid Notebook',
-            sections: [OneNoteMockDataFactory.createMockSection({
-              id: 'section-1',
-              name: 'Valid Section',
-              pages: [OneNoteMockDataFactory.createMockPage({
-                id: 'page-1',
-                title: 'Valid Page',
-                content: 'Valid content'
-              })]
-            })]
-          })]
-        });
-
-        return {
-          success: true,
-          hierarchy: mockHierarchy
+          }
         };
-      } else if (corruptedFiles.length > 0) {
-        // Throw error to test error handling for all corrupted files
-        throw new OneNoteError('Extraction failed', 'EXTRACTION_FAILED', { 
-          operation: 'extractMultiple',
-          recoverable: true 
-        });
       }
 
-      // Mock extraction for multiple valid files
-      const mockHierarchy = OneNoteMockDataFactory.createMockHierarchy({
-        notebooks: filePaths.map((fp, index) => OneNoteMockDataFactory.createMockNotebook({
-          id: `notebook-${index}`,
-          name: `Notebook ${index + 1}`,
-          sections: [OneNoteMockDataFactory.createMockSection({
-            id: `section-${index}`,
-            name: `Section ${index + 1}`,
-            pages: [OneNoteMockDataFactory.createMockPage({
-              id: `page-${index}`,
-              title: `Page ${index + 1}`,
-              content: `Content ${index + 1}`
-            })]
-          })]
-        })),
-        totalNotebooks: filePaths.length,
-        totalSections: filePaths.length,
-        totalPages: filePaths.length
-      });
+      const results: OneNoteExtractionResult[] = [];
+      const allNotebooks: OneNoteNotebook[] = [];
+      let totalSections = 0;
+      let totalPages = 0;
+
+      for (const filePath of filePaths) {
+        try {
+          const ext = path.extname(filePath).toLowerCase();
+          let result: OneNoteExtractionResult;
+
+          if (ext === '.onepkg') {
+            result = await this.extractFromOnepkg(filePath, options);
+          } else if (ext === '.one') {
+            result = await this.extractFromOne(filePath, options);
+          } else {
+            // Skip invalid files
+            continue;
+          }
+
+          results.push(result);
+          
+          if (result.success && result.hierarchy) {
+            allNotebooks.push(...result.hierarchy.notebooks);
+            totalSections += result.hierarchy.totalSections;
+            totalPages += result.hierarchy.totalPages;
+          }
+        } catch (error) {
+          console.warn(`Failed to extract ${filePath}:`, error);
+        }
+      }
+
+      // Create combined hierarchy from all successful extractions
+      const hierarchy: OneNoteHierarchy = {
+        notebooks: allNotebooks,
+        totalNotebooks: allNotebooks.length,
+        totalSections,
+        totalPages
+      };
 
       return {
         success: true,
-        hierarchy: mockHierarchy
+        hierarchy
       };
     } catch (error) {
       return OneNoteErrorUtils.createErrorResponse(error as Error, { operation: 'extractMultiple' });
     }
+  }
+
+  private extractNotebookName(filePath: string): string {
+    const fileName = path.basename(filePath, path.extname(filePath));
+    return fileName || 'Untitled Notebook';
+  }
+
+  private generateId(prefix: string): string {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 }
