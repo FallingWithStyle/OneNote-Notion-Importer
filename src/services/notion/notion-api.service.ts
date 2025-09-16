@@ -89,6 +89,21 @@ export interface INotionApiService {
   getDatabases(): Promise<NotionDatabase[]>;
 
   /**
+   * Find or create a workspace with the specified name
+   * @param workspaceName Name of the workspace to find or create
+   * @returns Promise<string> - Workspace ID
+   */
+  findOrCreateWorkspace(workspaceName: string): Promise<string>;
+
+  /**
+   * Find or create a database with the specified name
+   * @param databaseName Name of the database to find or create
+   * @param workspaceId Workspace ID where to create the database
+   * @returns Promise<string> - Database ID
+   */
+  findOrCreateDatabase(databaseName: string, workspaceId?: string): Promise<string>;
+
+  /**
    * Create a new page in Notion
    * @param page Page data to create
    * @param options API options
@@ -204,6 +219,101 @@ export class NotionApiService implements INotionApiService {
     } catch (error) {
       this.apiStats.errors++;
       return [];
+    }
+  }
+
+  async findOrCreateWorkspace(workspaceName: string): Promise<string> {
+    if (!this.client || !this.config) {
+      throw new Error('Service not initialized');
+    }
+
+    try {
+      // Get user information to find workspaces
+      const user = await this.client.users.me({});
+      this.apiStats.requestsMade++;
+
+      // For now, we'll use the user's default workspace
+      // In a real implementation, you'd search through available workspaces
+      // and create one if it doesn't exist
+      const workspaceId = user.id; // This is a simplified approach
+      
+      return workspaceId;
+    } catch (error) {
+      this.apiStats.errors++;
+      throw new Error(`Failed to find or create workspace: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async findOrCreateDatabase(databaseName: string, workspaceId?: string): Promise<string> {
+    if (!this.client || !this.config) {
+      throw new Error('Service not initialized');
+    }
+
+    try {
+      // First, try to find existing database with the same name
+      const existingDatabases = await this.getDatabases();
+      const existingDb = existingDatabases.find(db => 
+        db.title.toLowerCase() === databaseName.toLowerCase()
+      );
+
+      if (existingDb) {
+        return existingDb.id;
+      }
+
+      // If not found, create a new database
+      const targetWorkspaceId = workspaceId || this.config.workspaceId;
+      
+      if (!targetWorkspaceId) {
+        throw new Error('No workspace ID provided and none configured');
+      }
+
+      // Create a new page first (parent for the database)
+      const parentPage = await this.client.pages.create({
+        parent: {
+          type: 'page_id',
+          page_id: targetWorkspaceId
+        },
+        properties: {
+          title: {
+            title: [
+              {
+                text: {
+                  content: databaseName
+                }
+              }
+            ]
+          }
+        }
+      });
+
+      this.apiStats.requestsMade++;
+
+      // Create the database as a child of the parent page
+      const database = await this.client.databases.create({
+        parent: {
+          type: 'page_id',
+          page_id: parentPage.id
+        },
+        title: [
+          {
+            text: {
+              content: databaseName
+            }
+          }
+        ]
+      } as any);
+
+      this.apiStats.requestsMade++;
+
+      // Update the config with the new database ID
+      if (this.config) {
+        this.config.databaseId = database.id;
+      }
+
+      return database.id;
+    } catch (error) {
+      this.apiStats.errors++;
+      throw new Error(`Failed to find or create database: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

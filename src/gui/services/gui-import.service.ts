@@ -2,16 +2,20 @@ import { OneNoteService } from '../../services/onenote/onenote.service';
 import { NotionApiService } from '../../services/notion/notion-api.service';
 import { HierarchyMappingService } from '../../services/notion/hierarchy-mapping.service';
 import { AdvancedContentConverterService } from '../../services/onenote/advanced-content-converter.service';
+import { AutoSetupService } from '../../services/notion/auto-setup.service';
 import { ConfigService } from '../../services/config.service';
 import { OneNoteHierarchy, OneNoteNotebook, OneNoteSection, OneNotePage } from '../../types/onenote';
 import { logger } from '../../utils/logger';
 
 export interface ImportOptions {
   filePath: string;
-  workspaceId: string;
+  workspaceId?: string;
   databaseId?: string;
   selectedItems: string[];
   dryRun?: boolean;
+  autoSetup?: boolean;
+  workspaceName?: string;
+  databaseName?: string;
 }
 
 export interface ImportProgress {
@@ -39,6 +43,7 @@ export class GuiImportService {
   private notionApiService: NotionApiService;
   private hierarchyMappingService: HierarchyMappingService;
   private contentConverter: AdvancedContentConverterService;
+  private autoSetupService: AutoSetupService;
   private configService: ConfigService;
   private progressCallback?: (progress: ImportProgress) => void;
 
@@ -47,6 +52,7 @@ export class GuiImportService {
     this.notionApiService = new NotionApiService();
     this.hierarchyMappingService = new HierarchyMappingService();
     this.contentConverter = new AdvancedContentConverterService();
+    this.autoSetupService = new AutoSetupService(this.notionApiService);
     this.configService = new ConfigService();
   }
 
@@ -55,6 +61,23 @@ export class GuiImportService {
    */
   setProgressCallback(callback: (progress: ImportProgress) => void): void {
     this.progressCallback = callback;
+  }
+
+  /**
+   * Gets the setup status and recommendations
+   */
+  async getSetupStatus(): Promise<{
+    hasApiKey: boolean;
+    hasWorkspace: boolean;
+    hasDatabase: boolean;
+    recommendations: string[];
+  }> {
+    const config = await this.configService.loadConfig();
+    return await this.autoSetupService.getSetupStatus({
+      integrationToken: config.notion.apiKey || '',
+      workspaceId: config.notion.workspaceId || '',
+      databaseId: config.notion.databaseId || ''
+    });
   }
 
   /**
@@ -197,17 +220,55 @@ export class GuiImportService {
         return this.performDryRun(selectedItems, options);
       }
 
-      // Initialize Notion API
-      await this.notionApiService.initialize({
-        integrationToken: config.notion.apiKey || '',
-        workspaceId: options.workspaceId,
-        databaseId: options.databaseId || ''
-      });
+      // Initialize Notion API with auto-setup if requested
+      let workspaceId = options.workspaceId;
+      let databaseId = options.databaseId;
 
-      // Test connection
-      const connectionTest = await this.notionApiService.testConnection();
-      if (!connectionTest) {
-        throw new Error('Failed to connect to Notion API. Please check your token and workspace ID.');
+      if (options.autoSetup || (!workspaceId && !databaseId)) {
+        this.updateProgress({
+          status: 'importing',
+          currentStep: 'Auto-setting up workspace and database...',
+          progress: 15,
+          totalPages,
+          processedPages: 0,
+          successCount: 0,
+          errorCount: 0,
+          errors: []
+        });
+
+        const setupResult = await this.autoSetupService.setupWorkspaceAndDatabase({
+          integrationToken: config.notion.apiKey || '',
+          workspaceId: workspaceId || '',
+          databaseId: databaseId || ''
+        }, {
+          workspaceName: options.workspaceName || 'OneNote Import Workspace',
+          databaseName: options.databaseName || 'OneNote Import Database',
+          createIfNotExists: true
+        });
+
+        if (!setupResult.success) {
+          throw new Error(`Auto-setup failed: ${setupResult.error}`);
+        }
+
+        workspaceId = setupResult.workspaceId || workspaceId;
+        databaseId = setupResult.databaseId || databaseId;
+        
+        logger.info(`Auto-setup completed successfully!`);
+        logger.info(`Workspace ID: ${workspaceId}`);
+        logger.info(`Database ID: ${databaseId}`);
+      } else {
+        // Initialize Notion API manually
+        await this.notionApiService.initialize({
+          integrationToken: config.notion.apiKey || '',
+          workspaceId: workspaceId || '',
+          databaseId: databaseId || ''
+        });
+
+        // Test connection
+        const connectionTest = await this.notionApiService.testConnection();
+        if (!connectionTest) {
+          throw new Error('Failed to connect to Notion API. Please check your token and workspace ID.');
+        }
       }
 
       this.updateProgress({

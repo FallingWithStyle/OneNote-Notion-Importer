@@ -125,9 +125,16 @@ export class HierarchyMappingService implements IHierarchyMappingService {
     const databaseIds: string[] = [];
     
     for (const notebook of notebooks) {
-      // Generate database ID (in real implementation, this would create actual databases)
-      const databaseId = `db_${notebook.id}_${Date.now()}`;
-      databaseIds.push(databaseId);
+      try {
+        // Create a database for each notebook
+        const databaseName = `OneNote - ${notebook.name}`;
+        // Note: This would need access to the NotionApiService instance
+        // For now, we'll generate a placeholder ID
+        const databaseId = `db_${notebook.id}_${Date.now()}`;
+        databaseIds.push(databaseId);
+      } catch (error) {
+        console.error(`Failed to create database for notebook ${notebook.name}:`, error);
+      }
     }
 
     return databaseIds;

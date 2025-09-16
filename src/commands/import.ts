@@ -5,6 +5,7 @@ import { OneNoteService } from '../services/onenote/onenote.service';
 import { NotionApiService } from '../services/notion/notion-api.service';
 import { HierarchyMappingService } from '../services/notion/hierarchy-mapping.service';
 import { AdvancedContentConverterService } from '../services/onenote/advanced-content-converter.service';
+import { AutoSetupService } from '../services/notion/auto-setup.service';
 import path from 'path';
 import fs from 'fs';
 
@@ -16,6 +17,9 @@ importCommand
   .option('-w, --workspace <id>', 'Notion workspace ID')
   .option('-d, --database <id>', 'Notion database ID')
   .option('-c, --config <path>', 'Path to configuration file')
+  .option('--workspace-name <name>', 'Name for auto-created workspace (default: "OneNote Import Workspace")')
+  .option('--database-name <name>', 'Name for auto-created database (default: "OneNote Import Database")')
+  .option('--auto-setup', 'Automatically create workspace and database if they don\'t exist')
   .option('--dry-run', 'Preview what would be imported without actually importing')
   .option('--verbose', 'Enable verbose logging')
   .action(async (options) => {
@@ -87,24 +91,50 @@ importCommand
         return;
       }
 
-      // Initialize Notion API
-      const workspaceId = options.workspace || config.notion.workspaceId;
-      const databaseId = options.database || config.notion.databaseId;
-      
-      logger.info('Initializing Notion API connection...');
-      await notionApiService.initialize({
-        integrationToken: config.notion.apiKey || '',
-        workspaceId: workspaceId,
-        databaseId: databaseId
-      });
+      // Initialize Notion API with auto-setup if requested
+      let workspaceId = options.workspace || config.notion.workspaceId;
+      let databaseId = options.database || config.notion.databaseId;
 
-      // Test connection
-      const connectionTest = await notionApiService.testConnection();
-      if (!connectionTest) {
-        throw new Error('Failed to connect to Notion API. Please check your token and workspace ID.');
+      if (options.autoSetup || (!workspaceId && !databaseId)) {
+        logger.info('Auto-setup enabled: Will create workspace and database if needed...');
+        
+        const autoSetupService = new AutoSetupService(notionApiService);
+        const setupResult = await autoSetupService.setupWorkspaceAndDatabase({
+          integrationToken: config.notion.apiKey || '',
+          workspaceId: workspaceId,
+          databaseId: databaseId
+        }, {
+          workspaceName: options.workspaceName,
+          databaseName: options.databaseName,
+          createIfNotExists: true
+        });
+
+        if (!setupResult.success) {
+          throw new Error(`Auto-setup failed: ${setupResult.error}`);
+        }
+
+        workspaceId = setupResult.workspaceId || workspaceId;
+        databaseId = setupResult.databaseId || databaseId;
+        
+        logger.info(`Auto-setup completed successfully!`);
+        logger.info(`Workspace ID: ${workspaceId}`);
+        logger.info(`Database ID: ${databaseId}`);
+      } else {
+        logger.info('Initializing Notion API connection...');
+        await notionApiService.initialize({
+          integrationToken: config.notion.apiKey || '',
+          workspaceId: workspaceId,
+          databaseId: databaseId
+        });
+
+        // Test connection
+        const connectionTest = await notionApiService.testConnection();
+        if (!connectionTest) {
+          throw new Error('Failed to connect to Notion API. Please check your token and workspace ID.');
+        }
+
+        logger.info('Successfully connected to Notion API');
       }
-
-      logger.info('Successfully connected to Notion API');
 
       // Map hierarchy to Notion structure
       logger.info('Mapping OneNote hierarchy to Notion structure...');
@@ -145,7 +175,7 @@ importCommand
                   createdDate: page.createdDate,
                   lastModifiedDate: page.lastModifiedDate
                 }
-              }, workspaceId);
+              });
 
               successCount++;
               logger.debug(`Created page: ${page.title} (ID: ${notionPageId})`);

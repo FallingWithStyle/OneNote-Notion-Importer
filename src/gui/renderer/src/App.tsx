@@ -60,10 +60,13 @@ const App: React.FC = () => {
     try {
       const importOptions = {
         filePath: currentFilePath,
-        workspaceId: config.workspaceId || '',
+        workspaceId: config.workspaceId,
         databaseId: config.databaseId,
         selectedItems: selectedItems,
-        dryRun: false
+        dryRun: false,
+        autoSetup: config.autoSetup !== false,
+        workspaceName: config.workspaceName,
+        databaseName: config.databaseName
       };
 
       const result = await window.electronAPI?.importToNotion(importOptions);
