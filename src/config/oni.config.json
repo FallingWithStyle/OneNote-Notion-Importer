@@ -9,6 +9,14 @@
     "maxFileSize": 104857600,
     "tempDir": "./temp"
   },
+  "microsoft": {
+    "clientId": "",
+    "tenantId": "common",
+    "redirectUri": "http://localhost:3000/auth/callback",
+    "scopes": ["Files.Read", "User.Read"],
+    "accessToken": "",
+    "refreshToken": ""
+  },
   "output": {
     "format": "markdown",
     "includeMetadata": true,

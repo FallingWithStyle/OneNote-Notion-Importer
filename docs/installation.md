@@ -144,7 +144,20 @@ oni --version
 4. Select your workspace
 5. Copy the "Internal Integration Token"
 
-#### 2. Create a Notion Database
+#### 2. Set up Microsoft Graph Authentication (for OneDrive/Cloud features)
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Navigate to "Azure Active Directory" > "App registrations"
+3. Click "New registration"
+4. Enter a name (e.g., "ONI OneNote Importer")
+5. Select "Single tenant" or "Multitenant" based on your needs
+6. Set redirect URI to `http://localhost:3000/auth/callback`
+7. Click "Register"
+8. Copy the "Application (client) ID" and "Directory (tenant) ID"
+9. Go to "Certificates & secrets" > "New client secret"
+10. Add a description and set expiration (recommend 24 months)
+11. Copy the client secret value (you won't see it again)
+
+#### 3. Create a Notion Database
 1. Go to your Notion workspace
 2. Create a new page
 3. Add a database with the following properties:
@@ -154,7 +167,7 @@ oni --version
    - **Modified Date** (Last edited time)
    - **Source** (Text)
 
-#### 3. Configure ONI
+#### 4. Configure ONI
 ```bash
 # Run the setup wizard
 oni config --setup
@@ -162,6 +175,8 @@ oni config --setup
 # Or manually configure
 oni config --set notion.apiKey "your-api-key"
 oni config --set notion.databaseId "your-database-id"
+oni config --set microsoft.clientId "your-microsoft-client-id"
+oni config --set microsoft.tenantId "your-microsoft-tenant-id"
 ```
 
 ### Configuration File
@@ -182,6 +197,12 @@ The configuration is stored in:
     "supportedFormats": [".one", ".onepkg"],
     "maxFileSize": 104857600,
     "tempDir": "./temp"
+  },
+  "microsoft": {
+    "clientId": "your-microsoft-client-id",
+    "tenantId": "your-microsoft-tenant-id",
+    "redirectUri": "http://localhost:3000/auth/callback",
+    "scopes": ["Files.Read", "User.Read"]
   },
   "output": {
     "format": "markdown",
@@ -217,6 +238,10 @@ NOTION_API_KEY=your-notion-integration-token-here
 NOTION_WORKSPACE_ID=your-workspace-id-here
 NOTION_DATABASE_ID=your-database-id-here
 
+# Microsoft Graph Configuration (for OneDrive/Cloud features)
+MICROSOFT_CLIENT_ID=your-microsoft-client-id
+MICROSOFT_TENANT_ID=your-microsoft-tenant-id
+
 # Optional overrides
 LOG_LEVEL=info
 OUTPUT_DIR=./exports
@@ -228,6 +253,8 @@ OUTPUT_DIR=./exports
 export NOTION_API_KEY="your-api-key"
 export NOTION_WORKSPACE_ID="your-workspace-id"
 export NOTION_DATABASE_ID="your-database-id"
+export MICROSOFT_CLIENT_ID="your-microsoft-client-id"
+export MICROSOFT_TENANT_ID="your-microsoft-tenant-id"
 ```
 
 **Note:** Environment variables take precedence over configuration file values, providing a secure way to manage sensitive data.
@@ -262,6 +289,13 @@ oni validate sample.one
 
 # Test with different formats
 oni preview sample.onepkg
+```
+
+### Test Microsoft Graph Authentication
+```bash
+# Test Microsoft authentication (GUI only)
+# Open the GUI and try to authenticate with Microsoft
+# Check the authentication status in the File Selector
 ```
 
 ## Troubleshooting
@@ -414,6 +448,48 @@ oni config --show --debug
 - **Documentation**: [GitHub Wiki](https://github.com/your-repo/oni/wiki)
 - **Issues**: [GitHub Issues](https://github.com/your-repo/oni/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/your-repo/oni/discussions)
+
+### Microsoft Graph Authentication Issues
+
+#### "401 Unauthorized" Error
+**Problem:** Getting 401 errors when trying to access OneDrive files.
+
+**Solutions:**
+1. **Check Client ID and Tenant ID**: Ensure they're correctly configured
+   ```bash
+   oni config --show
+   ```
+
+2. **Verify Redirect URI**: Must be exactly `http://localhost:3000/auth/callback`
+
+3. **Check Token Expiration**: Tokens expire after 1 hour by default
+   - Re-authenticate through the GUI
+   - Check if refresh token is working
+
+4. **Verify Permissions**: Ensure your Azure app has the required permissions:
+   - `Files.Read` - to read OneDrive files
+   - `User.Read` - to get user information
+
+#### "Authentication Failed" in GUI
+**Problem:** Authentication button doesn't work or shows errors.
+
+**Solutions:**
+1. **Check Configuration**: Ensure Microsoft client ID is set
+2. **Browser Issues**: Try a different browser for authentication
+3. **Network Issues**: Check if you can access login.microsoftonline.com
+4. **Clear Tokens**: Clear stored tokens and try again
+   ```bash
+   oni config --set microsoft.accessToken ""
+   oni config --set microsoft.refreshToken ""
+   ```
+
+#### "Invalid Client" Error
+**Problem:** Azure returns "invalid client" error.
+
+**Solutions:**
+1. **Check Client ID**: Ensure it matches exactly from Azure Portal
+2. **Check Tenant ID**: Use "common" for multi-tenant or your specific tenant ID
+3. **Verify App Registration**: Ensure the app is properly registered in Azure
 
 ## Next Steps
 

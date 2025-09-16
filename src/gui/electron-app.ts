@@ -1,4 +1,4 @@
-import { BrowserWindow, app, dialog, ipcMain, Menu } from 'electron';
+import { BrowserWindow, app, dialog, ipcMain, Menu, shell } from 'electron';
 import path from 'path';
 import { GuiImportService, ImportOptions, ImportProgress } from './services/gui-import.service';
 
@@ -180,6 +180,10 @@ export class ElectronApp {
     ipcMainInstance.handle('load-env-config', async () => {
       return await this.handleLoadEnvConfig();
     });
+
+    ipcMainInstance.handle('open-external-url', async (_event: any, url: string) => {
+      return await this.handleOpenExternalUrl(url);
+    });
   }
 
   /**
@@ -347,6 +351,17 @@ export class ElectronApp {
         success: false,
         error: error instanceof Error ? error.message : String(error)
       };
+    }
+  }
+
+  /**
+   * Handles opening external URLs
+   */
+  async handleOpenExternalUrl(url: string): Promise<void> {
+    try {
+      await shell.openExternal(url);
+    } catch (error) {
+      console.error('Failed to open external URL:', error);
     }
   }
 

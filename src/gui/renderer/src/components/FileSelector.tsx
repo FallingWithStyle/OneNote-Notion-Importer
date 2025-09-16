@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { OneNoteLinkParser, ParsedOneNoteLink } from '../../../../utils/onenote-link-parser';
 import { CloudDownloadService } from '../../../../services/onenote/cloud-download.service';
 import { OneDriveApiService } from '../../../../services/onenote/onedrive-api.service';
+import { MicrosoftAuthService } from '../../../../services/microsoft/microsoft-auth.service';
+import { ConfigService } from '../../../../services/config.service';
 
 interface FileSelectorProps {
   onFileSelected: (filePath: string) => void;
@@ -15,14 +17,36 @@ export const FileSelector: React.FC<FileSelectorProps> = ({ onFileSelected, onCl
   const [inputMode, setInputMode] = useState<'file' | 'link'>('file');
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
   const [downloadStatus, setDownloadStatus] = useState<string>('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authError, setAuthError] = useState<string>('');
 
-  // Initialize cloud download service
-  const [cloudDownloadService] = useState(() => {
-    // For now, we'll create a mock OneDrive service since we need an access token
-    // In a real implementation, this would be passed as a prop or from context
-    const mockOneDriveService = new OneDriveApiService('mock-token');
-    return new CloudDownloadService(mockOneDriveService);
-  });
+  // Initialize services
+  const [configService] = useState(() => new ConfigService());
+  const [authService] = useState(() => new MicrosoftAuthService(configService));
+  const [cloudDownloadService, setCloudDownloadService] = useState<CloudDownloadService | null>(null);
+
+  // Initialize authentication and cloud download service
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const authenticated = await authService.isAuthenticated();
+        setIsAuthenticated(authenticated);
+        
+        if (authenticated) {
+          const accessToken = await authService.getValidAccessToken();
+          if (accessToken) {
+            const oneDriveService = new OneDriveApiService(accessToken);
+            setCloudDownloadService(new CloudDownloadService(oneDriveService));
+          }
+        }
+      } catch (error) {
+        console.error('Authentication initialization failed:', error);
+        setAuthError('Failed to initialize authentication');
+      }
+    };
+
+    initializeAuth();
+  }, [authService]);
 
   const handleFileSelect = async () => {
     setIsLoading(true);
@@ -84,6 +108,11 @@ export const FileSelector: React.FC<FileSelectorProps> = ({ onFileSelected, onCl
   };
 
   const handleCloudDownload = async (parsedLink: ParsedOneNoteLink) => {
+    if (!cloudDownloadService) {
+      setAuthError('Not authenticated with Microsoft. Please authenticate first.');
+      return;
+    }
+
     setIsLoading(true);
     setDownloadStatus('Downloading from cloud...');
     setDownloadProgress(0);
@@ -127,6 +156,49 @@ export const FileSelector: React.FC<FileSelectorProps> = ({ onFileSelected, onCl
       setTimeout(() => {
         setDownloadStatus('');
         setDownloadProgress(0);
+      }, 3000);
+    }
+  };
+
+  const handleAuthenticate = async () => {
+    try {
+      const authUrl = authService.getAuthorizationUrl();
+      if (authUrl) {
+        // Open authentication URL in external browser
+        window.electronAPI?.openExternalUrl?.(authUrl);
+        setDownloadStatus('Please complete authentication in your browser and return to this app.');
+      } else {
+        setAuthError('Failed to generate authentication URL. Please check your Microsoft configuration.');
+      }
+    } catch (error) {
+      setAuthError(`Authentication failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  const handleAuthCallback = async (code: string) => {
+    try {
+      setIsLoading(true);
+      setDownloadStatus('Completing authentication...');
+      
+      const tokens = await authService.exchangeCodeForToken(code);
+      if (tokens) {
+        setIsAuthenticated(true);
+        setAuthError('');
+        
+        // Initialize cloud download service with new token
+        const oneDriveService = new OneDriveApiService(tokens.accessToken);
+        setCloudDownloadService(new CloudDownloadService(oneDriveService));
+        
+        setDownloadStatus('Authentication successful! You can now download OneNote files from the cloud.');
+      } else {
+        setAuthError('Failed to complete authentication. Please try again.');
+      }
+    } catch (error) {
+      setAuthError(`Authentication failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => {
+        setDownloadStatus('');
       }, 3000);
     }
   };
@@ -189,6 +261,37 @@ export const FileSelector: React.FC<FileSelectorProps> = ({ onFileSelected, onCl
         )}
       </div>
 
+      {/* Show authentication status */}
+      {inputMode === 'link' && (
+        <div className="auth-status">
+          <h4>Microsoft Authentication</h4>
+          <div className="auth-details">
+            <p><strong>Status:</strong> 
+              <span className={isAuthenticated ? 'success' : 'error'}>
+                {isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
+              </span>
+            </p>
+            {!isAuthenticated && (
+              <div className="auth-actions">
+                <button
+                  className="auth-button"
+                  onClick={handleAuthenticate}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Authenticating...' : 'Authenticate with Microsoft'}
+                </button>
+                <p className="auth-note">
+                  You need to authenticate with Microsoft to download OneNote files from the cloud.
+                </p>
+              </div>
+            )}
+            {authError && (
+              <p className="error"><strong>Error:</strong> {authError}</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Show parsed link information */}
       {inputMode === 'link' && parsedLink && (
         <div className="parsed-link-info">
@@ -206,6 +309,7 @@ export const FileSelector: React.FC<FileSelectorProps> = ({ onFileSelected, onCl
             {(parsedLink.type === 'onedrive' || parsedLink.type === 'onenote') && parsedLink.isValid && (
               <p className="info">
                 <strong>Note:</strong> This cloud link will be downloaded automatically.
+                {!isAuthenticated && ' (Authentication required)'}
               </p>
             )}
           </div>
@@ -238,10 +342,18 @@ export const FileSelector: React.FC<FileSelectorProps> = ({ onFileSelected, onCl
       <button
         className="file-button"
         onClick={handleProcessFile}
-        disabled={!filePath.trim() || isLoading || (inputMode === 'link' && parsedLink && !parsedLink.isValid)}
+        disabled={
+          !filePath.trim() || 
+          isLoading || 
+          (inputMode === 'link' && parsedLink && !parsedLink.isValid) ||
+          (inputMode === 'link' && (parsedLink?.type === 'onedrive' || parsedLink?.type === 'onenote') && !isAuthenticated)
+        }
         style={{ width: '100%' }}
       >
-        Process File
+        {inputMode === 'link' && (parsedLink?.type === 'onedrive' || parsedLink?.type === 'onenote') && !isAuthenticated
+          ? 'Authenticate Required'
+          : 'Process File'
+        }
       </button>
 
       <div className="file-info">

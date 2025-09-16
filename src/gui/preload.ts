@@ -24,6 +24,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMenuAbout: (callback: () => void) => ipcRenderer.on('menu-about', callback),
   onMenuDocumentation: (callback: () => void) => ipcRenderer.on('menu-documentation', callback),
 
+  // External URL handling
+  openExternalUrl: (url: string) => ipcRenderer.invoke('open-external-url', url),
+
   // Remove listeners
   removeAllListeners: (channel: string) => ipcRenderer.removeAllListeners(channel)
 });
@@ -42,6 +45,7 @@ declare global {
       onMenuExportSettings: (callback: () => void) => void;
       onMenuAbout: (callback: () => void) => void;
       onMenuDocumentation: (callback: () => void) => void;
+      openExternalUrl: (url: string) => Promise<void>;
       removeAllListeners: (channel: string) => void;
     };
   }
