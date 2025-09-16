@@ -15,6 +15,14 @@ const oneNoteService = new OneNoteService();
 const electronApp = new ElectronApp();
 electronApp.initialize(app);
 
+// Load the React app when the window is ready
+app.whenReady().then(() => {
+  const mainWindow = electronApp.getMainWindow();
+  if (mainWindow) {
+    electronApp.loadReactApp(mainWindow, 'production');
+  }
+});
+
 // Handle app events
 app.on('before-quit', () => {
   // Cleanup resources
