@@ -54,6 +54,23 @@
 - [x] Task 7: Handle edge cases and complex content types
 - [x] Task 8: Optimize conversion performance for large files
 
+### Story 2.3: OneNote Link Parsing and GUI Integration
+- [x] Task 1: Create OneNoteLinkParser utility for parsing OneDrive URLs
+- [x] Task 2: Implement onenote: protocol URL parsing functionality
+- [x] Task 3: Add support for local file path detection and validation
+- [x] Task 4: Extract filename and section ID from OneNote links
+- [x] Task 5: Create TypeScript types for parsed link data structures
+- [x] Task 6: Enhance FileSelector component with tabbed interface
+- [x] Task 7: Implement auto-detection of OneNote links in GUI input
+- [x] Task 8: Add parsed link information display with validation status
+- [x] Task 9: Create comprehensive test suite with 13 test cases
+- [x] Task 10: Add CSS styling for new UI components and feedback
+- [x] Task 11: Implement OneDrive API integration for direct file access
+- [x] Task 12: Add support for downloading OneNote files from cloud links
+- [x] Task 13: Create batch processing for multiple OneNote links
+- [x] Task 14: Add link validation and error recovery mechanisms
+- [x] Task 15: Implement caching for frequently accessed OneNote links
+
 ---
 
 ## Epic 3: Notion Integration
