@@ -15,12 +15,19 @@ const App: React.FC = () => {
   const [currentFilePath, setCurrentFilePath] = useState<string>('');
 
   useEffect(() => {
-    // Load initial configuration
-    window.electronAPI?.getConfig('notion.workspaceId').then((result: any) => {
-      if (result.success) {
-        setConfig((prev: any) => ({ ...prev, workspaceId: result.value }));
+    // Load initial configuration from .env file
+    const loadInitialConfig = async () => {
+      try {
+        const result = await window.electronAPI?.loadEnvConfig();
+        if (result?.success && result.config) {
+          setConfig(result.config);
+        }
+      } catch (error) {
+        console.error('Failed to load .env configuration:', error);
       }
-    });
+    };
+
+    loadInitialConfig();
   }, []);
 
   const handleFileSelected = async (filePath: string) => {

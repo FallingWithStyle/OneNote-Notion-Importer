@@ -176,6 +176,10 @@ export class ElectronApp {
     ipcMainInstance.handle('import-to-notion', async (_event: any, options: ImportOptions) => {
       return await this.handleImportToNotion(options);
     });
+
+    ipcMainInstance.handle('load-env-config', async () => {
+      return await this.handleLoadEnvConfig();
+    });
   }
 
   /**
@@ -306,6 +310,38 @@ export class ElectronApp {
     try {
       await configService.set(key, value);
       return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      };
+    }
+  }
+
+  /**
+   * Handles loading .env configuration
+   */
+  async handleLoadEnvConfig(): Promise<{ success: boolean; config?: any; error?: string }> {
+    try {
+      const configService = (global as any).configService;
+      if (!configService) {
+        return { success: false, error: 'Config service not available' };
+      }
+
+      // Load configuration with environment overrides
+      const config = await configService.loadConfig();
+      
+      // Extract relevant values for the GUI
+      const envConfig = {
+        notionApiKey: config.notion?.apiKey || '',
+        workspaceId: config.notion?.workspaceId || '',
+        databaseId: config.notion?.databaseId || '',
+        autoSetup: config.notion?.autoSetup !== false,
+        workspaceName: config.notion?.workspaceName || 'OneNote Import Workspace',
+        databaseName: config.notion?.databaseName || 'OneNote Import Database'
+      };
+
+      return { success: true, config: envConfig };
     } catch (error) {
       return {
         success: false,

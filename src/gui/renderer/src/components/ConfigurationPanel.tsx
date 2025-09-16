@@ -19,6 +19,7 @@ export const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
     workspaceName: 'OneNote Import Workspace',
     databaseName: 'OneNote Import Database'
   });
+  const [apiKeySource, setApiKeySource] = useState<'env' | 'manual' | 'unknown'>('unknown');
 
   useEffect(() => {
     setLocalConfig(prev => ({
@@ -32,6 +33,13 @@ export const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
       workspaceName: config.workspaceName || 'OneNote Import Workspace',
       databaseName: config.databaseName || 'OneNote Import Database'
     }));
+
+    // Detect if API key was loaded from .env
+    if (config.notionApiKey && config.notionApiKey !== localConfig.notionApiKey) {
+      setApiKeySource('env');
+    } else if (config.notionApiKey && apiKeySource === 'unknown') {
+      setApiKeySource('manual');
+    }
   }, [config]);
 
   const handleInputChange = (field: string, value: string) => {
@@ -54,6 +62,7 @@ export const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
   const handleNotionApiKeyChange = (value: string) => {
     handleInputChange('notionApiKey', value);
     handleSaveConfig('notion.apiKey', value);
+    setApiKeySource('manual');
   };
 
   const handleWorkspaceIdChange = (value: string) => {
@@ -115,7 +124,19 @@ export const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
           onChange={(e) => handleNotionApiKeyChange(e.target.value)}
           placeholder="Enter your Notion integration token"
         />
-        <small>Get your API key from Notion's integration settings</small>
+        <small>
+          Get your API key from Notion's integration settings
+          {apiKeySource === 'env' && (
+            <span style={{ color: '#27ae60', fontWeight: 'bold' }}>
+              {' '}• Loaded from .env file
+            </span>
+          )}
+          {apiKeySource === 'manual' && (
+            <span style={{ color: '#3498db', fontWeight: 'bold' }}>
+              {' '}• Manually entered
+            </span>
+          )}
+        </small>
       </div>
 
       <div className="config-group">

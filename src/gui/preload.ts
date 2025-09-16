@@ -15,6 +15,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Import operations
   importToNotion: (options: any) => ipcRenderer.invoke('import-to-notion', options),
 
+  // Environment configuration
+  loadEnvConfig: () => ipcRenderer.invoke('load-env-config'),
+
   // Menu events
   onMenuOpenFile: (callback: () => void) => ipcRenderer.on('menu-open-file', callback),
   onMenuExportSettings: (callback: () => void) => ipcRenderer.on('menu-export-settings', callback),
@@ -34,6 +37,7 @@ declare global {
       processOneNoteFile: (filePath: string) => Promise<any>;
       getConfig: (key: string) => Promise<any>;
       setConfig: (key: string, value: any) => Promise<any>;
+      loadEnvConfig: () => Promise<any>;
       onMenuOpenFile: (callback: () => void) => void;
       onMenuExportSettings: (callback: () => void) => void;
       onMenuAbout: (callback: () => void) => void;
